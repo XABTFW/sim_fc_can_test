@@ -60,6 +60,53 @@ Window {
     property int group3Count: 0
     property int group4Count: 0
 
+    // 各组执行开关状态
+    property bool group1Enabled: false
+    property bool group2Enabled: false
+    property bool group3Enabled: false
+    property bool group4Enabled: false
+
+    // 检查是否有开关打开，返回打开的组号数组
+    function getEnabledGroups() {
+        var enabledGroups = [];
+        if (group1Enabled) enabledGroups.push(1);
+        if (group2Enabled) enabledGroups.push(2);
+        if (group3Enabled) enabledGroups.push(3);
+        if (group4Enabled) enabledGroups.push(4);
+        return enabledGroups;
+    }
+
+    // 执行命令到所有启用的组
+    function executeCommandToEnabledGroups(cmd1, cmd2, cmd3, cmd4, cmd5) {
+        var enabledGroups = getEnabledGroups();
+        if (enabledGroups.length === 0) {
+            noGroupEnabledPopup.open();
+            addMessage("命令执行失败：请先打开待执行组的开关", "warning");
+            return false;
+        }
+        for (var i = 0; i < enabledGroups.length; i++) {
+            // 第二个参数填入组别号
+            if (cmd1 === 1) {
+                // 起飞命令
+                test_mavlink._sendcom(1, enabledGroups[i], 0, 0, 0);
+                addMessage("发送起飞命令到第" + enabledGroups[i] + "组", "success");
+            } else if (cmd3 === 1) {
+                // 降落命令
+                test_mavlink._sendcom(0, enabledGroups[i], 1, 0, 0);
+                addMessage("发送降落命令到第" + enabledGroups[i] + "组", "success");
+            } else if (cmd4 !== 0) {
+                // 暂停命令
+                test_mavlink._sendcom(0, enabledGroups[i], 0, cmd4, 0);
+                addMessage("发送暂停命令到第" + enabledGroups[i] + "组", "info");
+            } else if (cmd5 !== 0) {
+                // 继续命令
+                test_mavlink._sendcom(0, enabledGroups[i], 0, 0, cmd5);
+                addMessage("发送继续命令到第" + enabledGroups[i] + "组", "info");
+            }
+        }
+        return true;
+    }
+
     // 更新各组数量
     function updateGroupCounts() {
         var c1 = 0, c2 = 0, c3 = 0, c4 = 0;
@@ -75,6 +122,26 @@ Window {
         group2Count = c2;
         group3Count = c3;
         group4Count = c4;
+    }
+
+    // 交互消息列表模型
+    ListModel {
+        id: messageListModel
+    }
+
+    // 添加交互消息的函数
+    // msgType: "info", "success", "warning", "error"
+    function addMessage(msg, msgType) {
+        if (!msgType) msgType = "info";
+        var timestamp = new Date().toLocaleTimeString(Qt.locale(), "HH:mm:ss");
+        messageListModel.append({
+            "message": "[" + timestamp + "] " + msg,
+            "msgType": msgType
+        });
+        // 限制消息数量，最多保留100条
+        if (messageListModel.count > 100) {
+            messageListModel.remove(0);
+        }
     }
 
     // 您的属性和信号保持不变
@@ -322,46 +389,158 @@ Window {
                 }
 
                // RowLayout { // 第一组几个
+                    Switch {
+                        id: group1Switch
+                        checked: group1Enabled
+                        onCheckedChanged: group1Enabled = checked
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredHeight: 20
+                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        indicator: Rectangle {
+                            implicitWidth: 36
+                            implicitHeight: 18
+                            x: 0
+                            y: (parent.height - height) / 2
+                            radius: 9
+                            color: group1Switch.checked ? "#4CAF50" : "#5c6370"
+                            border.color: group1Switch.checked ? "#45a049" : "#6c7380"
+                            border.width: 1
+                            Rectangle {
+                                x: group1Switch.checked ? parent.width - width - 2 : 2
+                                y: 2
+                                width: 14
+                                height: 14
+                                radius: 7
+                                color: group1Switch.checked ? "white" : "#9ca3af"
+                                Behavior on x { NumberAnimation { duration: 150 } }
+                            }
+                        }
+                    }
+
                     RadiusButton {// 第一组
                         text: "";
                         color: modelColor1;// 选择第一组的颜色
                         enabled:false
-
+                        Layout.alignment: Qt.AlignVCenter
                     }
-
 
                     Label {
                         text: "第一组 " + group1Count + " 架"
                         color: root.textColor
                         font.pixelSize: 14
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Switch {
+                        id: group2Switch
+                        checked: group2Enabled
+                        onCheckedChanged: group2Enabled = checked
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredHeight: 20
+                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        indicator: Rectangle {
+                            implicitWidth: 36
+                            implicitHeight: 18
+                            x: 0
+                            y: (parent.height - height) / 2
+                            radius: 9
+                            color: group2Switch.checked ? "#4CAF50" : "#5c6370"
+                            border.color: group2Switch.checked ? "#45a049" : "#6c7380"
+                            border.width: 1
+                            Rectangle {
+                                x: group2Switch.checked ? parent.width - width - 2 : 2
+                                y: 2
+                                width: 14
+                                height: 14
+                                radius: 7
+                                color: group2Switch.checked ? "white" : "#9ca3af"
+                                Behavior on x { NumberAnimation { duration: 150 } }
+                            }
+                        }
                     }
 
                     RadiusButton {// 第二组
                         text: "";
                         color: root.modelColor2; //第二组颜色需改变
                         enabled:false
-
+                        Layout.alignment: Qt.AlignVCenter
                     }
-
 
                     Label {
                         text: "第二组 " + group2Count + " 架"
                         color: root.textColor
                         font.pixelSize: 14
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Switch {
+                        id: group3Switch
+                        checked: group3Enabled
+                        onCheckedChanged: group3Enabled = checked
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredHeight: 20
+                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        indicator: Rectangle {
+                            implicitWidth: 36
+                            implicitHeight: 18
+                            x: 0
+                            y: (parent.height - height) / 2
+                            radius: 9
+                            color: group3Switch.checked ? "#4CAF50" : "#5c6370"
+                            border.color: group3Switch.checked ? "#45a049" : "#6c7380"
+                            border.width: 1
+                            Rectangle {
+                                x: group3Switch.checked ? parent.width - width - 2 : 2
+                                y: 2
+                                width: 14
+                                height: 14
+                                radius: 7
+                                color: group3Switch.checked ? "white" : "#9ca3af"
+                                Behavior on x { NumberAnimation { duration: 150 } }
+                            }
+                        }
                     }
 
                     RadiusButton {// 第三组
                         text: "";
                         color: modelColor3; //第三组颜3色需改变
                         enabled:false
-
+                        Layout.alignment: Qt.AlignVCenter
                     }
-
 
                     Label {
                         text: "第三组 " + group3Count + " 架"
                         color: root.textColor
                         font.pixelSize: 14
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Switch {
+                        id: group4Switch
+                        checked: group4Enabled
+                        onCheckedChanged: group4Enabled = checked
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredHeight: 20
+                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        indicator: Rectangle {
+                            implicitWidth: 36
+                            implicitHeight: 18
+                            x: 0
+                            y: (parent.height - height) / 2
+                            radius: 9
+                            color: group4Switch.checked ? "#4CAF50" : "#5c6370"
+                            border.color: group4Switch.checked ? "#45a049" : "#6c7380"
+                            border.width: 1
+                            Rectangle {
+                                x: group4Switch.checked ? parent.width - width - 2 : 2
+                                y: 2
+                                width: 14
+                                height: 14
+                                radius: 7
+                                color: group4Switch.checked ? "white" : "#9ca3af"
+                                Behavior on x { NumberAnimation { duration: 150 } }
+                            }
+                        }
                     }
 
                     RadiusButton {// 第四组
@@ -369,15 +548,16 @@ Window {
                         text: "";
                         color: modelColor4; //第四组颜色需改变
                         enabled:false
+                        Layout.alignment: Qt.AlignVCenter
                        // visible: false
                     }
-
 
                     Label {
                         id:modellable4
                         text: "第四组 " + group4Count + " 架"
                         color: root.textColor
                         font.pixelSize: 14
+                        Layout.alignment: Qt.AlignVCenter
                        // visible: false
                     }
                // }
@@ -437,12 +617,16 @@ Window {
                     CustomButton {
                         text: "暂停";
                         color: root.accentColor;
-                        onClicked: test_mavlink._sendcom(0,0,0,separate_main,0)
+                        onClicked: {
+                            executeCommandToEnabledGroups(0, 0, 0, separate_main, 0)
+                        }
                     }
                     CustomButton {
                         text: "继续";
                         color: secondaryColor;
-                        onClicked: test_mavlink._sendcom(0,0,0,0,separate_main)
+                        onClicked: {
+                            executeCommandToEnabledGroups(0, 0, 0, 0, separate_main)
+                        }
                     }
                 }
 
@@ -4738,14 +4922,47 @@ Window {
                                                 if(plan_arr[i1].is_connected)swarm_send.store_airplane_group(plan_arr[i1].objectName, plan_arr[i1].group_id, true)
                                             }
                                             main_node_name.length = 1
-                                            main_node_name[0] = plan_arr[0].objectName
-                                           /* swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,  未考虑连接后再设置的情况
-                                                              idpos_map[main_node_name[0]][0],
-                                                              idpos_map[main_node_name[0]][1],
-                                                              idpos_map[main_node_name[0]][2])*/
-                                            set_main_name(plan_arr[0])
-                                            if(plan_arr[0].is_connected === true)set_main_color(plan_arr[0].objectName)
+                                            // 找id最小的作为主机
+                                            var minId1Grp = Number.MAX_VALUE
+                                            var minIdx1Grp = 0
+                                            for (var findMin1 = 0; findMin1 < plan_arr.length; findMin1++) {
+                                                var id1Grp = Number(plan_arr[findMin1].objectName)
+                                                if (id1Grp < minId1Grp) {
+                                                    minId1Grp = id1Grp
+                                                    minIdx1Grp = findMin1
+                                                }
+                                            }
+                                            main_node_name[0] = plan_arr[minIdx1Grp].objectName
+                                            set_main_name(plan_arr[minIdx1Grp])
+                                            if(plan_arr[minIdx1Grp].is_connected === true)set_main_color(plan_arr[minIdx1Grp].objectName)
                                             send_all_airplane_pos(1,0)
+
+                                            // 将模型居中排列
+                                            var modelCount1 = plan_arr.length;
+                                            if (modelCount1 > 0) {
+                                                var areaWidth1 = Math.floor(control.width / 40) - 1;
+                                                var areaHeight1 = Math.floor(control.height / 40) - 1;
+                                                var cols1 = Math.min(modelCount1, areaWidth1);
+                                                var rows1 = Math.ceil(modelCount1 / cols1);
+                                                var startX1 = Math.floor((areaWidth1 - cols1) / 2);
+                                                var startY1 = Math.floor((areaHeight1 - rows1) / 2);
+
+                                                var xx1 = startX1;
+                                                var yy1 = startY1;
+                                                var lim1 = startX1 + cols1;
+
+                                                for (var c1 = 0; c1 < plan_arr.length; c1++) {
+                                                    if (xx1 < lim1) {
+                                                        screen_pos_to_world_pos(xx1, yy1, plan_arr[c1]);
+                                                        xx1++;
+                                                    } else {
+                                                        yy1++;
+                                                        xx1 = startX1;
+                                                        screen_pos_to_world_pos(xx1, yy1, plan_arr[c1]);
+                                                        xx1++;
+                                                    }
+                                                }
+                                            }
 
                                             grp_pos_mp[1] = 1
                                             group_num = 1
@@ -4765,30 +4982,33 @@ Window {
                                                 if(plan_arr[i].is_connected)swarm_send.store_airplane_group(plan_arr[i].objectName, plan_arr[i].group_id, true) //
                                             }
                                             main_node_name.length = 2
+                                            // 找第1组中id最小的作为主机
+                                            var minId1 = Number.MAX_VALUE
+                                            var minIdx1 = 0
                                             for (var n0 = 0; n0 < plan_arr.length / 2; n0++) {
-                                                if (if_main_node(plan_arr[n0].objectName)) { // 用set_main判断
-                                                    main_node_name[0] = plan_arr[n0].objectName
-                                                    set_main_name(plan_arr[n0])
-                                                    if(plan_arr[n0].is_connected === true)set_main_color(plan_arr[n0].objectName)
-                                                    break;
+                                                var id1 = Number(plan_arr[n0].objectName)
+                                                if (id1 < minId1) {
+                                                    minId1 = id1
+                                                    minIdx1 = n0
                                                 }
-
-                                                main_node_name[0] = plan_arr[n0].objectName
-                                                set_main_name(plan_arr[n0])
-                                                if(plan_arr[n0].is_connected === true)set_main_color(plan_arr[n0].objectName)
                                             }
+                                            main_node_name[0] = plan_arr[minIdx1].objectName
+                                            set_main_name(plan_arr[minIdx1])
+                                            if(plan_arr[minIdx1].is_connected === true)set_main_color(plan_arr[minIdx1].objectName)
 
+                                            // 找第2组中id最小的作为主机
+                                            var minId2 = Number.MAX_VALUE
+                                            var minIdx2 = j + 1
                                             for (var n1 = j + 1; n1 < plan_arr.length; n1++) {
-                                                if (if_main_node(plan_arr[n1].objectName)) {
-                                                    main_node_name[1] = plan_arr[n1].objectName
-                                                    set_main_name(plan_arr[n1])
-                                                    if(plan_arr[n1].is_connected === true)set_main_color(plan_arr[n1].objectName)
-                                                    break;
+                                                var id2 = Number(plan_arr[n1].objectName)
+                                                if (id2 < minId2) {
+                                                    minId2 = id2
+                                                    minIdx2 = n1
                                                 }
-                                                main_node_name[1] = plan_arr[n1].objectName
-                                                set_main_name(plan_arr[n1])
-                                                if(plan_arr[n1].is_connected === true)set_main_color(plan_arr[n1].objectName)
-                                            }/*
+                                            }
+                                            main_node_name[1] = plan_arr[minIdx2].objectName
+                                            set_main_name(plan_arr[minIdx2])
+                                            if(plan_arr[minIdx2].is_connected === true)set_main_color(plan_arr[minIdx2].objectName)/*
                 if (modelmp[main_node_name[0]].is_connected === true)
                                             swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
                                                               idpos_map[main_node_name[0]][0],
@@ -4889,42 +5109,47 @@ Window {
                                             }
                                             main_node_name.length = 3
 
+                                            // 找第1组中id最小的作为主机
+                                            var minId3_1 = Number.MAX_VALUE
+                                            var minIdx3_1 = 0
                                             for (var mn3_1 = 0; mn3_1 < plan_arr.length / 3; mn3_1++) {
-                                                if (if_main_node(plan_arr[mn3_1].objectName)) {
-                                                    main_node_name[0] = plan_arr[mn3_1].objectName
-                                                    set_main_name(plan_arr[mn3_1])
-                                                    if(plan_arr[mn3_1].is_connected === true)set_main_color(plan_arr[mn3_1].objectName)
-                                                    break;
+                                                var id3_1 = Number(plan_arr[mn3_1].objectName)
+                                                if (id3_1 < minId3_1) {
+                                                    minId3_1 = id3_1
+                                                    minIdx3_1 = mn3_1
                                                 }
-
-                                                main_node_name[0] = plan_arr[mn3_1].objectName
-                                                set_main_name(plan_arr[mn3_1])
-                                                if(plan_arr[mn3_1].is_connected === true)set_main_color(plan_arr[mn3_1].objectName)
                                             }
+                                            main_node_name[0] = plan_arr[minIdx3_1].objectName
+                                            set_main_name(plan_arr[minIdx3_1])
+                                            if(plan_arr[minIdx3_1].is_connected === true)set_main_color(plan_arr[minIdx3_1].objectName)
 
+                                            // 找第2组中id最小的作为主机
+                                            var minId3_2 = Number.MAX_VALUE
+                                            var minIdx3_2 = i + 1
                                             for (var mn3_2 = i + 1; mn3_2 < plan_arr.length * 2 / 3; mn3_2++) {
-                                                if (if_main_node(plan_arr[mn3_2].objectName)) {
-                                                    main_node_name[1] = plan_arr[mn3_2].objectName
-                                                    set_main_name(plan_arr[mn3_2])
-                                                    if(plan_arr[mn3_2].is_connected === true)set_main_color(plan_arr[mn3_2].objectName)
-                                                    break;
+                                                var id3_2 = Number(plan_arr[mn3_2].objectName)
+                                                if (id3_2 < minId3_2) {
+                                                    minId3_2 = id3_2
+                                                    minIdx3_2 = mn3_2
                                                 }
-                                                main_node_name[1] = plan_arr[mn3_2].objectName
-                                                set_main_name(plan_arr[mn3_2])
-                                                if(plan_arr[mn3_2].is_connected === true)set_main_color(plan_arr[mn3_2].objectName)
                                             }
+                                            main_node_name[1] = plan_arr[minIdx3_2].objectName
+                                            set_main_name(plan_arr[minIdx3_2])
+                                            if(plan_arr[minIdx3_2].is_connected === true)set_main_color(plan_arr[minIdx3_2].objectName)
 
+                                            // 找第3组中id最小的作为主机
+                                            var minId3_3 = Number.MAX_VALUE
+                                            var minIdx3_3 = j + 1
                                             for (var mn3_3 = j + 1; mn3_3 < plan_arr.length; mn3_3++) {
-                                                if (if_main_node(plan_arr[mn3_3].objectName)) {
-                                                    main_node_name[2] = plan_arr[mn3_3].objectName
-                                                    set_main_name(plan_arr[mn3_3])
-                                                    if(plan_arr[mn3_3].is_connected === true)set_main_color(plan_arr[mn3_3].objectName)
-                                                    break;
+                                                var id3_3 = Number(plan_arr[mn3_3].objectName)
+                                                if (id3_3 < minId3_3) {
+                                                    minId3_3 = id3_3
+                                                    minIdx3_3 = mn3_3
                                                 }
-                                                main_node_name[2] = plan_arr[mn3_3].objectName
-                                                set_main_name(plan_arr[mn3_3])
-                                                if(plan_arr[mn3_3].is_connected === true)set_main_color(plan_arr[mn3_3].objectName)
                                             }
+                                            main_node_name[2] = plan_arr[minIdx3_3].objectName
+                                            set_main_name(plan_arr[minIdx3_3])
+                                            if(plan_arr[minIdx3_3].is_connected === true)set_main_color(plan_arr[minIdx3_3].objectName)
 
                                          /*   swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
                                                               idpos_map[main_node_name[0]][0],
@@ -4988,52 +5213,69 @@ Window {
                                             main_node_name[2] = ""
                                             main_node_name[3] = ""
 
-                                            // 为每组设置主机
+                                            // 为每组设置主机 - 找id最小的
+                                            // 第1组
+                                            var minId4_1 = Number.MAX_VALUE
+                                            var minIdx4_1 = 0
                                             for (var mn4_1 = 0; mn4_1 < bound1 && mn4_1 < plan_arr.length; mn4_1++) {
-                                                if (if_main_node(plan_arr[mn4_1].objectName)) {
-                                                    main_node_name[0] = plan_arr[mn4_1].objectName
-                                                    set_main_name(plan_arr[mn4_1])
-                                                    if(plan_arr[mn4_1].is_connected === true)set_main_color(plan_arr[mn4_1].objectName)
-                                                    break;
+                                                var id4_1 = Number(plan_arr[mn4_1].objectName)
+                                                if (id4_1 < minId4_1) {
+                                                    minId4_1 = id4_1
+                                                    minIdx4_1 = mn4_1
                                                 }
-                                                main_node_name[0] = plan_arr[mn4_1].objectName
-                                                set_main_name(plan_arr[mn4_1])
-                                                if(plan_arr[mn4_1].is_connected === true)set_main_color(plan_arr[mn4_1].objectName)
+                                            }
+                                            if (minIdx4_1 < plan_arr.length) {
+                                                main_node_name[0] = plan_arr[minIdx4_1].objectName
+                                                set_main_name(plan_arr[minIdx4_1])
+                                                if(plan_arr[minIdx4_1].is_connected === true)set_main_color(plan_arr[minIdx4_1].objectName)
                                             }
 
+                                            // 第2组
+                                            var minId4_2 = Number.MAX_VALUE
+                                            var minIdx4_2 = bound1
                                             for (var mn4_2 = bound1; mn4_2 < bound2 && mn4_2 < plan_arr.length; mn4_2++) {
-                                                if (if_main_node(plan_arr[mn4_2].objectName)) {
-                                                    main_node_name[1] = plan_arr[mn4_2].objectName
-                                                    set_main_name(plan_arr[mn4_2])
-                                                    if(plan_arr[mn4_2].is_connected === true)set_main_color(plan_arr[mn4_2].objectName)
-                                                    break;
+                                                var id4_2 = Number(plan_arr[mn4_2].objectName)
+                                                if (id4_2 < minId4_2) {
+                                                    minId4_2 = id4_2
+                                                    minIdx4_2 = mn4_2
                                                 }
-                                                main_node_name[1] = plan_arr[mn4_2].objectName
-                                                set_main_name(plan_arr[mn4_2])
-                                                if(plan_arr[mn4_2].is_connected === true)set_main_color(plan_arr[mn4_2].objectName)
+                                            }
+                                            if (minIdx4_2 < plan_arr.length) {
+                                                main_node_name[1] = plan_arr[minIdx4_2].objectName
+                                                set_main_name(plan_arr[minIdx4_2])
+                                                if(plan_arr[minIdx4_2].is_connected === true)set_main_color(plan_arr[minIdx4_2].objectName)
                                             }
 
+                                            // 第3组
+                                            var minId4_3 = Number.MAX_VALUE
+                                            var minIdx4_3 = bound2
                                             for (var mn4_3 = bound2; mn4_3 < bound3 && mn4_3 < plan_arr.length; mn4_3++) {
-                                                if (if_main_node(plan_arr[mn4_3].objectName)) {
-                                                    main_node_name[2] = plan_arr[mn4_3].objectName
-                                                    set_main_name(plan_arr[mn4_3])
-                                                    if(plan_arr[mn4_3].is_connected === true)set_main_color(plan_arr[mn4_3].objectName)
-                                                    break;
+                                                var id4_3 = Number(plan_arr[mn4_3].objectName)
+                                                if (id4_3 < minId4_3) {
+                                                    minId4_3 = id4_3
+                                                    minIdx4_3 = mn4_3
                                                 }
-                                                main_node_name[2] = plan_arr[mn4_3].objectName
-                                                set_main_name(plan_arr[mn4_3])
-                                                if(plan_arr[mn4_3].is_connected === true)set_main_color(plan_arr[mn4_3].objectName)
                                             }
+                                            if (minIdx4_3 < plan_arr.length) {
+                                                main_node_name[2] = plan_arr[minIdx4_3].objectName
+                                                set_main_name(plan_arr[minIdx4_3])
+                                                if(plan_arr[minIdx4_3].is_connected === true)set_main_color(plan_arr[minIdx4_3].objectName)
+                                            }
+
+                                            // 第4组
+                                            var minId4_4 = Number.MAX_VALUE
+                                            var minIdx4_4 = bound3
                                             for (var mn4_4 = bound3; mn4_4 < plan_arr.length; mn4_4++) {
-                                                if (if_main_node(plan_arr[mn4_4].objectName)) {
-                                                    main_node_name[3] = plan_arr[mn4_4].objectName
-                                                    set_main_name(plan_arr[mn4_4])
-                                                    if(plan_arr[mn4_4].is_connected === true)set_main_color(plan_arr[mn4_4].objectName)
-                                                    break;
+                                                var id4_4 = Number(plan_arr[mn4_4].objectName)
+                                                if (id4_4 < minId4_4) {
+                                                    minId4_4 = id4_4
+                                                    minIdx4_4 = mn4_4
                                                 }
-                                                main_node_name[3] = plan_arr[mn4_4].objectName
-                                                set_main_name(plan_arr[mn4_4])
-                                                if(plan_arr[mn4_4].is_connected === true){set_main_color(plan_arr[mn4_4].objectName)}
+                                            }
+                                            if (minIdx4_4 < plan_arr.length) {
+                                                main_node_name[3] = plan_arr[minIdx4_4].objectName
+                                                set_main_name(plan_arr[minIdx4_4])
+                                                if(plan_arr[minIdx4_4].is_connected === true)set_main_color(plan_arr[minIdx4_4].objectName)
                                             }
                 /*
                                             swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
@@ -5180,16 +5422,27 @@ Window {
                                     }
 
                                     // 将选中的模型分配到目标组
+                                    // 先找出选中模型中id最小的作为主机
+                                    var minIdIndep = Number.MAX_VALUE
+                                    var minIdxIndep = 0
+                                    for(var findMin = 0; findMin < select_merge.length; findMin++) {
+                                        var idIndep = Number(select_merge[findMin].objectName)
+                                        if (idIndep < minIdIndep) {
+                                            minIdIndep = idIndep
+                                            minIdxIndep = findMin
+                                        }
+                                    }
+
                                     for(var i = 0; i < select_merge.length; i++) {
                                         select_merge[i].group_id = targetGroupId;
                                         select_merge[i].select_color = 0.6;
 
                                         if(select_merge[i].is_connected === true) {
-                                            // 第一个选中的会成为主机，其他的设为从机
-                                            if(i === 0) {
+                                            // id最小的会成为主机，其他的设为从机
+                                            if(i === minIdxIndep) {
                                                 swarm_send.store_airplane_group(select_merge[i].objectName, select_merge[i].group_id, true, false);
                                             } else {
-                                                // 非第一个选中的，设为从机
+                                                // 非id最小的，设为从机
                                                 swarm_send.store_airplane_group(select_merge[i].objectName, select_merge[i].group_id, true, true);
                                             }
                                         }
@@ -5200,15 +5453,15 @@ Window {
                                         main_node_name.push("");
                                     }
 
-                                    // 设置目标组的主机
-                                    main_node_name[targetGroupId - 1] = select_merge[0].objectName;
-                                    select_merge[0].set_main = 1;
+                                    // 设置目标组的主机为id最小的
+                                    main_node_name[targetGroupId - 1] = select_merge[minIdxIndep].objectName;
+                                    select_merge[minIdxIndep].set_main = 1;
 
-                                    if(select_merge[0].is_connected === true) {
-                                        swarm_send.set_main_airplane(main_node_name[targetGroupId - 1], select_merge[0].group_id,
+                                    if(select_merge[minIdxIndep].is_connected === true) {
+                                        swarm_send.set_main_airplane(main_node_name[targetGroupId - 1], select_merge[minIdxIndep].group_id,
                                                           0, 0, 0);
-                                        select_merge[0].is_main = true;
-                                        set_main_color(select_merge[0]);
+                                        select_merge[minIdxIndep].is_main = true;
+                                        set_main_color(select_merge[minIdxIndep]);
                                     }
 
                                     // 更新组数为实际组数+1（新增的组）
@@ -5331,9 +5584,20 @@ Window {
                                         }
                                     }
 
-                                    var targetGroup = select_merge[0].group_id;  // 目标组（第一个选中的主机所在组）
+                                    // 找出所有选中主机中id最小的作为合并后的主机
+                                    var minIdMerge = Number.MAX_VALUE
+                                    var minIdxMerge = 0
+                                    for(var findMinMerge = 0; findMinMerge < select_merge.length; findMinMerge++) {
+                                        var idMerge = Number(select_merge[findMinMerge].objectName)
+                                        if (idMerge < minIdMerge) {
+                                            minIdMerge = idMerge
+                                            minIdxMerge = findMinMerge
+                                        }
+                                    }
+
+                                    var targetGroup = select_merge[minIdxMerge].group_id;  // 目标组（id最小的主机所在组）
                                     var targetPos = grp_pos_mp[targetGroup];  // 目标组的屏幕位置
-                                    console.log("合并到组:", targetGroup, "位置:", targetPos);
+                                    console.log("合并到组:", targetGroup, "位置:", targetPos, "主机id:", select_merge[minIdxMerge].objectName);
 
                                     // 找到目标组当前占用的最大X坐标，用于放置被合并的模型
                                     var targetMaxX = 0;
@@ -5346,8 +5610,9 @@ Window {
                                     }
                                     console.log("目标组最大X坐标:", targetMaxX);
 
-                                    // 处理被合并的组
-                                    for(var h = 1; h < select_merge.length; h++) {
+                                    // 处理被合并的组（除了id最小的主机所在组）
+                                    for(var h = 0; h < select_merge.length; h++) {
+                                        if(h === minIdxMerge) continue;  // 跳过id最小的主机所在组
                                         var sourceGroup = select_merge[h].group_id;
                                         var sourcePos = grp_pos_mp[sourceGroup];  // 被合并组的屏幕位置
                                         console.log("合并组", sourceGroup, "位置", sourcePos, "到组", targetGroup, "位置", targetPos);
@@ -5421,7 +5686,7 @@ Window {
                                         select_merge[h].select_color = 0.6;
                                     }
 
-                                    select_merge[0].select_color = 0.6;
+                                    select_merge[minIdxMerge].select_color = 0.6;
 
                                     // 更新组数
                                     group_num = group_num - select_merge.length + 1;
@@ -5464,7 +5729,7 @@ Window {
 
                                     console.log("分界线状态: 垂直=", showVertical, "水平=", showHorizontal);
 
-                                    if(select_merge[0].is_connected === true) {
+                                    if(select_merge[minIdxMerge].is_connected === true) {
                                         send_all_airplane_pos(targetGroup, 0);
                                     }
 
@@ -5721,7 +5986,7 @@ Window {
                             Layout.fillWidth: true
                             color: "#03DE6D"
                             onClicked: {
-                                test_mavlink._sendcom(1,0,0,0,0)
+                                executeCommandToEnabledGroups(1, 0, 0, 0, 0)
                             }
                         }
                         CustomButton {
@@ -5730,7 +5995,7 @@ Window {
                             Layout.fillWidth: true
                             color: root.dangerColor
                             onClicked: {
-                                test_mavlink._sendcom(0,0,1,0,0)
+                                executeCommandToEnabledGroups(0, 0, 1, 0, 0)
                             }
                         }
                     }
@@ -5750,11 +6015,17 @@ Window {
                 bottomMargin: 6
             }
             height: 150
+            color: "transparent"
 
-            // 飞机高度调整框
+            // 左侧：飞机高度调整框 (占4/5)
             Rectangle {
                 id: droneStatusBar
-                anchors.fill: parent
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                width: parent.width * 4 / 5 - 6  // 4/5宽度，减去间距
                 color: root.panelColor
                 radius: 8
                 border.color: "#4c566a"
@@ -6009,6 +6280,114 @@ Window {
                             noPlaneText.visible = plan_arr.length === 0;
                         }
                     }
+                }
+            }
+
+            // 右侧：交互消息区域 (占1/5)
+            Rectangle {
+                id: messageArea
+                anchors {
+                    right: parent.right
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                width: parent.width * 1 / 5 - 6  // 1/5宽度，减去间距
+                color: root.panelColor
+                radius: 8
+                border.color: "#4c566a"
+                border.width: 1
+
+                // 标题
+                Rectangle {
+                    id: messageHeader
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                    }
+                    height: 25
+                    color: "#3b4252"
+                    radius: 8
+
+                    // 底部圆角遮挡
+                    Rectangle {
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            bottom: parent.bottom
+                        }
+                        height: 8
+                        color: parent.color
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "交互消息"
+                        font.pixelSize: 12
+                        font.bold: true
+                        color: "#88c0d0"
+                    }
+                }
+
+                // 消息列表（可滚动）
+                ScrollView {
+                    id: messageScrollView
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: messageHeader.bottom
+                        bottom: parent.bottom
+                        margins: 5
+                        topMargin: 2
+                    }
+                    clip: true
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+                    ListView {
+                        id: messageListView
+                        anchors.fill: parent
+                        model: messageListModel
+                        spacing: 3
+                        delegate: Rectangle {
+                            width: messageListView.width
+                            height: msgText.implicitHeight + 6
+                            color: index % 2 === 0 ? "#2e3440" : "#3b4252"
+                            radius: 4
+
+                            Text {
+                                id: msgText
+                                anchors {
+                                    left: parent.left
+                                    right: parent.right
+                                    verticalCenter: parent.verticalCenter
+                                    margins: 5
+                                }
+                                text: model.message
+                                font.pixelSize: 10
+                                color: model.msgType === "error" ? "#bf616a" : 
+                                       model.msgType === "warning" ? "#ebcb8b" : 
+                                       model.msgType === "success" ? "#a3be8c" : "#d8dee9"
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
+                        // 自动滚动到底部
+                        onCountChanged: {
+                            if (count > 0) {
+                                positionViewAtEnd();
+                            }
+                        }
+                    }
+                }
+
+                // 无消息时的提示
+                Text {
+                    anchors.centerIn: parent
+                    text: "暂无消息"
+                    font.pixelSize: 12
+                    color: "#4c566a"
+                    visible: messageListModel.count === 0
                 }
             }
         }
@@ -6362,6 +6741,46 @@ Window {
                 text: "确定"
                 Layout.alignment: Qt.AlignHCenter
                 onClicked: devide_grp_pop.close()
+                color: root.primaryColor
+            }
+        }
+    }
+
+    // 没有开关打开的提示弹窗
+    Popup {
+        id: noGroupEnabledPopup
+        anchors.centerIn: Overlay.overlay
+        width: 320
+        height: 160
+        modal: true
+        background: Rectangle {
+            color: "#3b4252"
+            radius: 12
+            border.color: accentColor
+            border.width: 2
+        }
+        contentItem: ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 20
+            Label {
+                text: "⚠️ 提示"
+                font.bold: true
+                font.pixelSize: 18
+                color: root.accentColor
+                Layout.alignment: Qt.AlignHCenter
+            }
+            Label {
+                text: "请打开待执行组的开关"
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+                color: textColor
+            }
+            CustomButton {
+                text: "确定"
+                Layout.alignment: Qt.AlignHCenter
+                onClicked: noGroupEnabledPopup.close()
                 color: root.primaryColor
             }
         }
@@ -6767,71 +7186,97 @@ Window {
 
         console.log("move_model调用: n=", n, "sumn=", sumn);
 
+        // 先统计该组有多少个模型
+        var groupId = Number(trans_pos_to_grp(n));
+        var groupCount = 0;
+        for (var c = 0; c < plan_arr.length; c++) {
+            if (plan_arr[c].group_id === groupId) {
+                groupCount++;
+            }
+        }
+
+        // 计算区域的边界
+        var areaLeft = 0, areaRight = 0, areaTop = 0, areaBottom = 0;
+        var areaWidth = 0, areaHeight = 0;
+
         if (sumn === 2) {
             // 分成2组：左右分布
             if (n === 1) {
-                // 第一组：左半边
-                xx = 0;
-                yy = 0;
-                lim = Math.floor(control.width / 2 / 40) - 1; // 左半边的列数限制
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 40) - 1;
             } else if (n === 2) {
-                // 第二组：右半边
-                mstart = Math.floor(control.width / 2 / 40) + 1; // 从中线右侧开始
-                xx = mstart;
-                yy = 0;
-                lim = Math.floor(control.width / 40) - 2; // 右边界留空间
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 40) - 1;
             }
         } else if (sumn === 3) {
             // 分成3组：上左、上右、下左
             if (n === 1) {
-                // 第一组：左上角
-                xx = 0;
-                yy = 0;
-                lim = Math.floor(control.width / 2 / 40) - 1;
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
             } else if (n === 2) {
-                // 第二组：右上角
-                mstart = Math.floor(control.width / 2 / 40) + 1;
-                xx = mstart;
-                yy = 0;
-                lim = Math.floor(control.width / 40) - 2;
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
             } else if (n === 3) {
-                // 第三组：左下角（靠左侧）
-                xx = 0; // 从最左边开始
-                yy = Math.floor(control.height / 2 / 40) + 1; // 从中线下方开始
-                lim = Math.floor(control.width / 2 / 40) - 1; // 限制在左半边
-                mstart = 0; // 换行时回到最左边
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
             }
         } else if (sumn === 4) {
             // 分成4组：四个象限
             if (n === 1) {
-                // 第一组：左上角
-                xx = 0;
-                yy = 0;
-                lim = Math.floor(control.width / 2 / 40) - 1;
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
             } else if (n === 2) {
-                // 第二组：右上角
-                mstart = Math.floor(control.width / 2 / 40) + 1;
-                xx = mstart;
-                yy = 0;
-                lim = Math.floor(control.width / 40) - 2;
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
             } else if (n === 3) {
-                // 第三组：左下角
-                xx = 0;
-                yy = Math.floor(control.height / 2 / 40) + 1;
-                lim = Math.floor(control.width / 2 / 40) - 1;
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
             } else if (n === 4) {
-                // 第四组：右下角
-                mstart = Math.floor(control.width / 2 / 40) + 1;
-                xx = mstart;
-                yy = Math.floor(control.height / 2 / 40) + 1;
-                lim = Math.floor(control.width / 40) - 2;
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
             }
         }
 
-        console.log("位置参数: xx=", xx, "yy=", yy, "lim=", lim, "mstart=", mstart);
+        areaWidth = areaRight - areaLeft + 1;
+        areaHeight = areaBottom - areaTop + 1;
+
+        // 计算模型排列所需的行数和列数
+        var cols = Math.min(groupCount, areaWidth);  // 每行最多放满区域宽度
+        var rows = Math.ceil(groupCount / cols);     // 需要的行数
+
+        // 计算居中的起始位置
+        var startX = areaLeft + Math.floor((areaWidth - cols) / 2);
+        var startY = areaTop + Math.floor((areaHeight - rows) / 2);
+
+        console.log("区域: left=", areaLeft, "right=", areaRight, "top=", areaTop, "bottom=", areaBottom);
+        console.log("模型数:", groupCount, "列数:", cols, "行数:", rows);
+        console.log("居中起始位置: startX=", startX, "startY=", startY);
+
+        xx = startX;
+        yy = startY;
+        lim = startX + cols;  // 当前行的右边界
+        mstart = startX;      // 换行时回到的起始X
 
         for (var i = 0; i < plan_arr.length; i++) {
-            if (plan_arr[i].group_id === Number(trans_pos_to_grp(n))) {
+            if (plan_arr[i].group_id === groupId) {
                 if(xx < lim) {
                     screen_pos_to_world_pos(xx, yy, plan_arr[i]);
                     xx++;
@@ -7274,6 +7719,41 @@ Window {
             plan_arr.push(plan_id[i])
            // console.log(plan_id[i].objectName,plan_id[i].visible,plan_id[i].pickable)
         }
+
+        // 将模型居中排列
+        var modelCount = plan_arr.length;
+        if (modelCount > 0) {
+            // 计算整个区域的大小
+            var areaWidth = Math.floor(control.width / 40) - 1;
+            var areaHeight = Math.floor(control.height / 40) - 1;
+
+            // 计算模型排列所需的行数和列数
+            var cols = Math.min(modelCount, areaWidth);
+            var rows = Math.ceil(modelCount / cols);
+
+            // 计算居中的起始位置
+            var startX = Math.floor((areaWidth - cols) / 2);
+            var startY = Math.floor((areaHeight - rows) / 2);
+
+            console.log("筹划居中排列: 模型数=", modelCount, "列数=", cols, "行数=", rows, "起始位置=", startX, startY);
+
+            var xx = startX;
+            var yy = startY;
+            var lim = startX + cols;
+
+            for (var j = 0; j < plan_arr.length; j++) {
+                if (xx < lim) {
+                    screen_pos_to_world_pos(xx, yy, plan_arr[j]);
+                    xx++;
+                } else {
+                    yy++;
+                    xx = startX;
+                    screen_pos_to_world_pos(xx, yy, plan_arr[j]);
+                    xx++;
+                }
+            }
+        }
+
         // 刷新高度调整框
         updateGroupCounts();
         planArrChanged();

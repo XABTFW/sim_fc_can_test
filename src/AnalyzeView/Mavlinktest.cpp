@@ -5,6 +5,7 @@
 #include "MAVLinkProtocol.h"
 #include "Vehicle.h"
 #include <QDebug>
+#include "mavlink_msg_swarm_mission_item.h"
 
 Mavlinktest::Mavlinktest(QObject *parent)
     : QAbstractListModel(parent), _cursor_home_pos(-1), _cursor(0)
@@ -109,6 +110,56 @@ void Mavlinktest::_receiveMessage(LinkInterface*, mavlink_message_t message)
         _test1 = QString::number(mavlink_uavinfo.mavid); emit test1Changed();
         _test2 = QString::number(mavlink_uavinfo.yaw); emit test2Changed();
         _test3 = QString::number(mavlink_uavinfo.rel_alt); emit test3Changed();
+    }
+
+    // ========== 转发 SWARM_MISSION_ITEM 消息给所有飞机 ==========
+    if (message.msgid == MAVLINK_MSG_ID_SWARM_MISSION_ITEM) {
+        mavlink_swarm_mission_item_t swarm_item;
+        mavlink_msg_swarm_mission_item_decode(&message, &swarm_item);
+
+        // 获取所有连接的飞机
+        QMap<int, Vehicle*> vehicles = MultiVehicleManager::instance()->my_vehicles();
+
+        for (auto it = vehicles.begin(); it != vehicles.end(); ++it) {
+            Vehicle* vehicle = it.value();
+            if (!vehicle) continue;
+
+            // 不转发给发送者自己
+            if (vehicle->id() == swarm_item.leader_id) continue;
+
+            WeakLinkInterfacePtr weakLink = vehicle->vehicleLinkManager()->primaryLink();
+            if (weakLink.expired()) continue;
+
+            SharedLinkInterfacePtr sharedLink = weakLink.lock();
+            if (!sharedLink) continue;
+
+            mavlink_message_t msg;
+            mavlink_msg_swarm_mission_item_pack_chan(
+                static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+                static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+                sharedLink->mavlinkChannel(),
+                &msg,
+                swarm_item.timestamp,
+                swarm_item.group_id,
+                swarm_item.leader_id,
+                swarm_item.mission_id,
+                swarm_item.total_count,
+                swarm_item.current_seq,
+                swarm_item.seq,
+                swarm_item.nav_cmd,
+                swarm_item.lat,
+                swarm_item.lon,
+                swarm_item.alt,
+                swarm_item.yaw,
+                swarm_item.acceptance_radius,
+                swarm_item.loiter_radius,
+                swarm_item.time_inside,
+                swarm_item.autocontinue,
+                swarm_item.sync_type
+            );
+
+            vehicle->sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
+        }
     }
 }
 
