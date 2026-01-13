@@ -162,12 +162,16 @@ Window {
         z: 1000  // 确保在最上层
     }
 
-    // 连接Mavlinktest2的操作确认信号到弹窗
+    // 连接Mavlinktest2的操作确认信号到弹窗和交互信息框
     Connections {
         target: test_mavlink
         function onSwarmOperationAckReceived(sysId, opType, result, oldValue, newValue, message) {
             console.log("[Myswarm] 收到操作确认: " + message);
             swarmOpPopup.showPopup(sysId, opType, result, oldValue, newValue, message);
+
+            // 同时添加到交互信息框
+            var msgType = (result === 0) ? "success" : "error";
+            addMessage(message, msgType);
         }
     }
 
@@ -6365,8 +6369,8 @@ Window {
                                 }
                                 text: model.message
                                 font.pixelSize: 10
-                                color: model.msgType === "error" ? "#bf616a" : 
-                                       model.msgType === "warning" ? "#ebcb8b" : 
+                                color: model.msgType === "error" ? "#bf616a" :
+                                       model.msgType === "warning" ? "#ebcb8b" :
                                        model.msgType === "success" ? "#a3be8c" : "#d8dee9"
                                 wrapMode: Text.WordWrap
                             }
