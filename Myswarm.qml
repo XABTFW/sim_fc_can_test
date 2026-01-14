@@ -399,11 +399,11 @@ Window {
                         onCheckedChanged: group1Enabled = checked
                         Layout.alignment: Qt.AlignVCenter
                         Layout.preferredHeight: 20
-                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        Layout.preferredWidth: 40
                         indicator: Rectangle {
                             implicitWidth: 36
                             implicitHeight: 18
-                            x: 0
+                            x: 2
                             y: (parent.height - height) / 2
                             radius: 9
                             color: group1Switch.checked ? "#4CAF50" : "#5c6370"
@@ -441,11 +441,11 @@ Window {
                         onCheckedChanged: group2Enabled = checked
                         Layout.alignment: Qt.AlignVCenter
                         Layout.preferredHeight: 20
-                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        Layout.preferredWidth: 40
                         indicator: Rectangle {
                             implicitWidth: 36
                             implicitHeight: 18
-                            x: 0
+                            x: 2
                             y: (parent.height - height) / 2
                             radius: 9
                             color: group2Switch.checked ? "#4CAF50" : "#5c6370"
@@ -483,11 +483,11 @@ Window {
                         onCheckedChanged: group3Enabled = checked
                         Layout.alignment: Qt.AlignVCenter
                         Layout.preferredHeight: 20
-                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        Layout.preferredWidth: 40
                         indicator: Rectangle {
                             implicitWidth: 36
                             implicitHeight: 18
-                            x: 0
+                            x: 2
                             y: (parent.height - height) / 2
                             radius: 9
                             color: group3Switch.checked ? "#4CAF50" : "#5c6370"
@@ -525,11 +525,11 @@ Window {
                         onCheckedChanged: group4Enabled = checked
                         Layout.alignment: Qt.AlignVCenter
                         Layout.preferredHeight: 20
-                        contentItem: Item { implicitWidth: 0; implicitHeight: 0 }
+                        Layout.preferredWidth: 40
                         indicator: Rectangle {
                             implicitWidth: 36
                             implicitHeight: 18
-                            x: 0
+                            x: 2
                             y: (parent.height - height) / 2
                             radius: 9
                             color: group4Switch.checked ? "#4CAF50" : "#5c6370"
@@ -672,113 +672,122 @@ Window {
                         console.log("View3D实际尺寸：宽=", width, "高=", height);
                     }
 
+                // 标记是否已完成初始化
+                property bool _initialized: false
+
                 onWidthChanged: {
                             if (width > 0) {
                                 console.log("View3D宽度更新：", width);
-                                // 此处可添加尺寸变化后的业务逻辑
 
-                                mymove(1,1,sphere_node)
-                                get_pos(sphere_node);
+                                // 只在首次初始化时执行mymove
+                                if (!_initialized) {
+                                    mymove(1,1,sphere_node)
+                                    get_pos(sphere_node);
 
-                                mymove(2,1,sphere_node2)
-                                get_pos(sphere_node2);
-                                mymove(3,1,sphere_node3)
-                                get_pos(sphere_node3);
-                                mymove(4,1,sphere_node4)
-                                get_pos(sphere_node4);
-                                mymove(5,1,sphere_node5)
-                                get_pos(sphere_node5);
-                                mymove(6,1,sphere_node6)
-                                get_pos(sphere_node6);
-                                mymove(7,1,sphere_node7)
-                                get_pos(sphere_node7);
-                                mymove(8,1,sphere_node8)
-                                get_pos(sphere_node8);
-                                mymove(9,1,sphere_node9)
-                                get_pos(sphere_node9);
-                                mymove(10,1,sphere_node10)
-                                get_pos(sphere_node10);
-                                mymove(11,1,sphere_node11)
-                                get_pos(sphere_node11);
-                                mymove(12,1,sphere_node12)
-                                get_pos(sphere_node12);
-                                mymove(13,1,sphere_node13)
-                                get_pos(sphere_node13);
-                                mymove(14,1,sphere_node14)
-                                get_pos(sphere_node14);
-                                mymove(15,1,sphere_node15)
-                                get_pos(sphere_node15);
-                                mymove(16,1,sphere_node16)
-                                get_pos(sphere_node16);
-                                mymove(17,1,sphere_node17)
-                                get_pos(sphere_node17);
-                                mymove(18,1,sphere_node18)
-                                get_pos(sphere_node18);
-                                mymove(19,1,sphere_node19)
-                                get_pos(sphere_node19);
-                                mymove(20,1,sphere_node20)
-                                get_pos(sphere_node20);
-                                mymove(21,1,sphere_node21)
-                                get_pos(sphere_node21);
-                                mymove(22,1,sphere_node22)
-                                get_pos(sphere_node22);
-                                mymove(23,1,sphere_node23)
-                                get_pos(sphere_node23);
-                                mymove(24,1,sphere_node24)
-                                get_pos(sphere_node24);
-                                mymove(25,1,sphere_node25)
-                                get_pos(sphere_node25);
-                                mymove(26,1,sphere_node26)
-                                get_pos(sphere_node26);
-                                mymove(27,1,sphere_node27)
-                                get_pos(sphere_node27);
-                                mymove(28,1,sphere_node28)
-                                get_pos(sphere_node28);
-                                mymove(1,2,sphere_node29)
-                                get_pos(sphere_node29);
-                                mymove(2,2,sphere_node30)
-                                get_pos(sphere_node30);
-                                mymove(3,2,sphere_node31)
-                                get_pos(sphere_node2);
-                                mymove(4,2,sphere_node32)
-                                get_pos(sphere_node32);
-                                mymove(5,2,sphere_node33)
-                                get_pos(sphere_node33);
-                                mymove(6,2,sphere_node34)
-                                get_pos(sphere_node34);
-                                mymove(7,2,sphere_node35)
-                                get_pos(sphere_node35);
-                                mymove(8,2,sphere_node36)
-                                get_pos(sphere_node36);
-                                mymove(9,2,sphere_node37)
-                                get_pos(sphere_node37);
-                                mymove(10,2,sphere_node38)
-                                get_pos(sphere_node38);
-                                mymove(11,2,sphere_node39)
-                                get_pos(sphere_node39);
-                                mymove(12,2,sphere_node40)
-                                get_pos(sphere_node40);
-                                mymove(13,2,sphere_node41)
-                                get_pos(sphere_node41);
-                                mymove(14,2,sphere_node42)
-                                get_pos(sphere_node42);
-                                mymove(15,2,sphere_node43)
-                                get_pos(sphere_node43);
-                                mymove(16,2,sphere_node44)
-                                get_pos(sphere_node44);
-                                mymove(17,2,sphere_node45)
-                                get_pos(sphere_node45);
-                                mymove(18,2,sphere_node46)
-                                get_pos(sphere_node46);
-                                mymove(19,2,sphere_node47)
-                                get_pos(sphere_node47);
-                                mymove(20,2,sphere_node48)
-                                get_pos(sphere_node48);
-                                mymove(21,2,sphere_node49)
-                                get_pos(sphere_node49);
-                                mymove(22,2,sphere_node50)
-                                get_pos(sphere_node50);
+                                    mymove(2,1,sphere_node2)
+                                    get_pos(sphere_node2);
+                                    mymove(3,1,sphere_node3)
+                                    get_pos(sphere_node3);
+                                    mymove(4,1,sphere_node4)
+                                    get_pos(sphere_node4);
+                                    mymove(5,1,sphere_node5)
+                                    get_pos(sphere_node5);
+                                    mymove(6,1,sphere_node6)
+                                    get_pos(sphere_node6);
+                                    mymove(7,1,sphere_node7)
+                                    get_pos(sphere_node7);
+                                    mymove(8,1,sphere_node8)
+                                    get_pos(sphere_node8);
+                                    mymove(9,1,sphere_node9)
+                                    get_pos(sphere_node9);
+                                    mymove(10,1,sphere_node10)
+                                    get_pos(sphere_node10);
+                                    mymove(11,1,sphere_node11)
+                                    get_pos(sphere_node11);
+                                    mymove(12,1,sphere_node12)
+                                    get_pos(sphere_node12);
+                                    mymove(13,1,sphere_node13)
+                                    get_pos(sphere_node13);
+                                    mymove(14,1,sphere_node14)
+                                    get_pos(sphere_node14);
+                                    mymove(15,1,sphere_node15)
+                                    get_pos(sphere_node15);
+                                    mymove(16,1,sphere_node16)
+                                    get_pos(sphere_node16);
+                                    mymove(17,1,sphere_node17)
+                                    get_pos(sphere_node17);
+                                    mymove(18,1,sphere_node18)
+                                    get_pos(sphere_node18);
+                                    mymove(19,1,sphere_node19)
+                                    get_pos(sphere_node19);
+                                    mymove(20,1,sphere_node20)
+                                    get_pos(sphere_node20);
+                                    mymove(21,1,sphere_node21)
+                                    get_pos(sphere_node21);
+                                    mymove(22,1,sphere_node22)
+                                    get_pos(sphere_node22);
+                                    mymove(23,1,sphere_node23)
+                                    get_pos(sphere_node23);
+                                    mymove(24,1,sphere_node24)
+                                    get_pos(sphere_node24);
+                                    mymove(25,1,sphere_node25)
+                                    get_pos(sphere_node25);
+                                    mymove(26,1,sphere_node26)
+                                    get_pos(sphere_node26);
+                                    mymove(27,1,sphere_node27)
+                                    get_pos(sphere_node27);
+                                    mymove(28,1,sphere_node28)
+                                    get_pos(sphere_node28);
+                                    mymove(1,2,sphere_node29)
+                                    get_pos(sphere_node29);
+                                    mymove(2,2,sphere_node30)
+                                    get_pos(sphere_node30);
+                                    mymove(3,2,sphere_node31)
+                                    get_pos(sphere_node2);
+                                    mymove(4,2,sphere_node32)
+                                    get_pos(sphere_node32);
+                                    mymove(5,2,sphere_node33)
+                                    get_pos(sphere_node33);
+                                    mymove(6,2,sphere_node34)
+                                    get_pos(sphere_node34);
+                                    mymove(7,2,sphere_node35)
+                                    get_pos(sphere_node35);
+                                    mymove(8,2,sphere_node36)
+                                    get_pos(sphere_node36);
+                                    mymove(9,2,sphere_node37)
+                                    get_pos(sphere_node37);
+                                    mymove(10,2,sphere_node38)
+                                    get_pos(sphere_node38);
+                                    mymove(11,2,sphere_node39)
+                                    get_pos(sphere_node39);
+                                    mymove(12,2,sphere_node40)
+                                    get_pos(sphere_node40);
+                                    mymove(13,2,sphere_node41)
+                                    get_pos(sphere_node41);
+                                    mymove(14,2,sphere_node42)
+                                    get_pos(sphere_node42);
+                                    mymove(15,2,sphere_node43)
+                                    get_pos(sphere_node43);
+                                    mymove(16,2,sphere_node44)
+                                    get_pos(sphere_node44);
+                                    mymove(17,2,sphere_node45)
+                                    get_pos(sphere_node45);
+                                    mymove(18,2,sphere_node46)
+                                    get_pos(sphere_node46);
+                                    mymove(19,2,sphere_node47)
+                                    get_pos(sphere_node47);
+                                    mymove(20,2,sphere_node48)
+                                    get_pos(sphere_node48);
+                                    mymove(21,2,sphere_node49)
+                                    get_pos(sphere_node49);
+                                    mymove(22,2,sphere_node50)
+                                    get_pos(sphere_node50);
 
+                                    _initialized = true;
+                                } else {
+                                    // 窗口大小变化时，重新居中已筹划的飞机
+                                    repositionPlanedAircraft();
+                                }
                             }
                         }
                 GridView{
@@ -7059,36 +7068,39 @@ Window {
         return 0
     }
 
-    // 将指定组的模型移动到指定屏幕位置，带碰撞检测
+    // 将指定组的模型移动到指定屏幕位置，带碰撞检测，并居中显示
     function moveGroupToPositionWithCollision(groupId, screenPos) {
         console.log("moveGroupToPositionWithCollision: groupId=", groupId, "screenPos=", screenPos);
 
         // 根据屏幕位置计算起始坐标和边界
         // 位置: 1=左上, 2=右上, 3=左下, 4=右下
-        var startX = 0;
-        var startY = 0;
-        var maxX = 0;
-        var maxY = 0;
+        var areaLeft = 0;
+        var areaTop = 0;
+        var areaRight = 0;
+        var areaBottom = 0;
         var halfWidth = Math.floor(control.width / 2 / 40);
         var halfHeight = Math.floor(control.height / 2 / 40);
         var fullWidth = Math.floor(control.width / 40) - 1;
         var fullHeight = Math.floor(control.height / 40) - 1;
 
         if(screenPos === 1) {
-            startX = 0; startY = 0;
-            maxX = halfWidth - 1; maxY = halfHeight - 1;
+            areaLeft = 0; areaTop = 0;
+            areaRight = halfWidth - 1; areaBottom = halfHeight - 1;
         } else if(screenPos === 2) {
-            startX = halfWidth + 1; startY = 0;
-            maxX = fullWidth; maxY = halfHeight - 1;
+            areaLeft = halfWidth + 1; areaTop = 0;
+            areaRight = fullWidth; areaBottom = halfHeight - 1;
         } else if(screenPos === 3) {
-            startX = 0; startY = halfHeight + 1;
-            maxX = halfWidth - 1; maxY = fullHeight;
+            areaLeft = 0; areaTop = halfHeight + 1;
+            areaRight = halfWidth - 1; areaBottom = fullHeight;
         } else if(screenPos === 4) {
-            startX = halfWidth + 1; startY = halfHeight + 1;
-            maxX = fullWidth; maxY = fullHeight;
+            areaLeft = halfWidth + 1; areaTop = halfHeight + 1;
+            areaRight = fullWidth; areaBottom = fullHeight;
         }
 
-        console.log("区域范围: startX=", startX, "startY=", startY, "maxX=", maxX, "maxY=", maxY);
+        var areaWidth = areaRight - areaLeft + 1;
+        var areaHeight = areaBottom - areaTop + 1;
+
+        console.log("区域范围: areaLeft=", areaLeft, "areaTop=", areaTop, "areaRight=", areaRight, "areaBottom=", areaBottom);
 
         // 收集该组的所有模型
         var groupModels = [];
@@ -7098,23 +7110,42 @@ Window {
             }
         }
 
-        // 逐个放置模型，检测碰撞
+        var groupCount = groupModels.length;
+        if (groupCount === 0) {
+            console.log("moveGroupToPositionWithCollision: 组", groupId, "没有飞机");
+            return;
+        }
+
+        // 计算模型排列所需的行数和列数
+        var cols = Math.min(groupCount, areaWidth);  // 每行最多放满区域宽度
+        var rows = Math.ceil(groupCount / cols);     // 需要的行数
+
+        // 计算居中的起始位置
+        var startX = areaLeft + Math.floor((areaWidth - cols) / 2);
+        var startY = areaTop + Math.floor((areaHeight - rows) / 2);
+
+        console.log("居中参数: cols=", cols, "rows=", rows, "startX=", startX, "startY=", startY);
+
+        // 逐个放置模型到居中位置
         var xx = startX;
         var yy = startY;
+        var lim = startX + cols;  // 当前行的右边界
 
         for(var j = 0; j < groupModels.length; j++) {
             var model = groupModels[j];
 
-            // 找到一个没有碰撞的位置
-            while(transform_crush(xx, yy, groupId) && xx <= maxX) {
+            // 检测碰撞，如果当前位置有其他组的飞机，则跳过
+            while(transform_crush(xx, yy, groupId) && xx < lim) {
                 xx++;
-                if(xx > maxX) {
-                    xx = startX;
-                    yy++;
-                    if(yy > maxY) {
-                        console.log("警告：区域内没有足够空间放置模型");
-                        break;
-                    }
+            }
+
+            // 如果当前行放满了，换到下一行
+            if(xx >= lim) {
+                yy++;
+                xx = startX;
+                // 重新检测碰撞
+                while(transform_crush(xx, yy, groupId) && xx < lim) {
+                    xx++;
                 }
             }
 
@@ -7123,7 +7154,7 @@ Window {
 
             // 移动到下一个位置
             xx++;
-            if(xx > maxX) {
+            if(xx >= lim) {
                 xx = startX;
                 yy++;
             }
@@ -7192,11 +7223,24 @@ Window {
 
         // 先统计该组有多少个模型
         var groupId = Number(trans_pos_to_grp(n));
+
+        // 如果找不到对应的组，直接返回
+        if (groupId === 0) {
+            console.log("move_model: 位置", n, "没有对应的组");
+            return;
+        }
+
         var groupCount = 0;
         for (var c = 0; c < plan_arr.length; c++) {
             if (plan_arr[c].group_id === groupId) {
                 groupCount++;
             }
+        }
+
+        // 如果该组没有飞机，直接返回
+        if (groupCount === 0) {
+            console.log("move_model: 组", groupId, "没有飞机");
+            return;
         }
 
         // 计算区域的边界
@@ -7763,6 +7807,56 @@ Window {
         planArrChanged();
     }
 
+    // 窗口大小变化时重新居中已筹划的飞机
+    function repositionPlanedAircraft() {
+        if (plan_arr.length === 0) {
+            return;  // 没有筹划的飞机，不需要处理
+        }
+
+        console.log("repositionPlanedAircraft: group_num=", group_num);
+
+        // 如果只有一个组，所有飞机居中显示
+        if (group_num === 1) {
+            var modelCount = plan_arr.length;
+            var areaWidth = Math.floor(control.width / 40) - 1;
+            var areaHeight = Math.floor(control.height / 40) - 1;
+
+            var cols = Math.min(modelCount, areaWidth);
+            var rows = Math.ceil(modelCount / cols);
+
+            var startX = Math.floor((areaWidth - cols) / 2);
+            var startY = Math.floor((areaHeight - rows) / 2);
+
+            console.log("单组居中: 模型数=", modelCount, "起始位置=", startX, startY);
+
+            var xx = startX;
+            var yy = startY;
+            var lim = startX + cols;
+
+            for (var j = 0; j < plan_arr.length; j++) {
+                if (xx < lim) {
+                    screen_pos_to_world_pos(xx, yy, plan_arr[j]);
+                    xx++;
+                } else {
+                    yy++;
+                    xx = startX;
+                    screen_pos_to_world_pos(xx, yy, plan_arr[j]);
+                    xx++;
+                }
+            }
+        } else {
+            // 多个组时，每个组在各自区域居中
+            // 遍历 grp_pos_mp 中实际存在的位置映射
+            for (var grpKey in grp_pos_mp) {
+                var grpId = Number(grpKey);
+                var pos = grp_pos_mp[grpKey];
+                if (grpId > 0 && pos > 0) {
+                    move_model(pos, group_num);
+                }
+            }
+        }
+    }
+
     // 信号：plan_arr 变化时触发
     signal planArrChanged()
 
@@ -7795,7 +7889,10 @@ Window {
     function performMove(xx, yy, thisnode) {
         // 实际执行移动的函数
         thisnode.visible = false
-        plan_id.push(thisnode)
+        // 只在初始化时添加到plan_id，避免重复添加
+        if (plan_id.indexOf(thisnode) === -1) {
+            plan_id.push(thisnode)
+        }
 /*
         var map_from_1 = control.mapFrom3DScene(node.scenePosition) // 屏幕坐标
 
