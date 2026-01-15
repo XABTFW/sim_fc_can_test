@@ -25,9 +25,6 @@ import QtQuick.Window
 import QtQuick3D 6.8
 import QtQuick3D.Helpers
 
-//import Qt3D.Core 2.15
-//import Qt3D.Render 2.15
-//import Qt3D.Extras 2.15
 import QtQuick3D.Physics 6.8
 import QtQuick3D.AssetUtils 6.8
 Window {
@@ -356,14 +353,6 @@ Window {
                 anchors.margins: 12
                 spacing: 15
 
-                // 飞行控制按钮组
-                // RowLayout {
-                //     spacing: 10
-                //     CustomButton { text: "自动"; color: secondaryColor; onClicked: test_mavlink._sendcom(1,0,0,0,0) }
-                //     CustomButton { text: "开始"; color: secondaryColor; onClicked: test_mavlink._sendcom(0,1,0,0,0) }
-                //     CustomButton { text: "停止"; color: dangerColor; onClicked: test_mavlink._sendcom(0,0,1,0,0) }
-                //     CustomButton { text: "选定主机"; color: accentColor }
-                // }
 
                 // 筹划管理
                 RowLayout {
@@ -400,7 +389,6 @@ Window {
                     }
                 }
 
-               // RowLayout { // 第一组几个
                     Switch {
                         id: group1Switch
                         checked: group1Enabled
@@ -572,56 +560,7 @@ Window {
                         Layout.alignment: Qt.AlignVCenter
                        // visible: false
                     }
-               // }
-                // 参数设置
-            /*    RowLayout {
-                    spacing: 10
 
-
-                    Label {
-                        text: "间距:"
-                        color: textColor
-                        font.pixelSize: 14
-                    }
-
-                    CustomTextField {
-                        id: input1
-                        text: "1"
-                        width: 60
-                        validator: IntValidator { bottom: 1; top: 100 }
-                    }
-
-                    Label {
-                        text: "米"
-                        color: root.textColor
-                        font.pixelSize: 14
-                    }
-
-                    Label {
-                        text: "高度:"
-                        color: root.textColor
-                        font.pixelSize: 14
-                    }
-
-                    CustomTextField {
-                        id: input2
-                        text: "0"
-                        width: 60
-                        validator: IntValidator { bottom: 0; top: 500 }
-                    }
-
-                    Label {
-                        text: "米"
-                        color: root.textColor
-                        font.pixelSize: 14
-                    }
-
-                    CustomButton {
-                        text: "设置高度"
-                        width: 100
-                        color: primaryColor
-                    }
-                }*/
 
                 // // 飞行管理
                 RowLayout {
@@ -858,7 +797,6 @@ Window {
                            id: perspective_camera
                          //  z:   control.height * 3.5   //1800左右
                            z:1800
-                          // aspectRatio: view3D.width / view3D.height
                        }
                        //光照
                        DirectionalLight {
@@ -948,44 +886,6 @@ Window {
                            }
                        }
 
-                           //children:[]
-                           // RuntimeLoader {
-                           //     id: myVehicleInstance // 给车辆实例一个唯一ID，方便后续引用
-                           //     source: "myvehicle.glb"
-                           //     eulerRotation.x: 90 // 模型姿态调整
-                           //     position: Qt.vector3d(0, 0, 0) // 初始位置
-                           //      scale: Qt.vector3d(6, 6, 6)
-
-
-                           //              // 添加ObjectPicker组件
-                           //              ObjectPicker {
-                           //                  id: modelPicker
-                           //                  dragEnabled: true
-                           //                  hoverEnabled: true
-                           //                  priority: 1
-
-                           //                  onPressed: (pick) => {
-                           //                      console.log("Pressed at:", pick.worldIntersection);
-                           //                      // 处理按下事件
-                           //                  }
-                           //                  onReleased: (pick) => {
-                           //                      console.log("Released at:", pick.worldIntersection);
-                           //                      // 处理释放事件
-                           //                  }
-                           //                  onMoved: (pick) => {
-                           //                      // 处理移动事件
-                           //                  }
-                           //              }
-
-                           //     // 通过status属性检查加载状态
-                           //     onStatusChanged: {
-                           //         if (status === RuntimeLoader.Success) {
-                           //             console.log("模型加载成功")
-                           //         } else if (status === RuntimeLoader.Error) {
-                           //             console.log("加载失败:", errorString)
-                           //         }
-                           //     }
-                           // }
 
                        Model {
                            Text {
@@ -1021,17 +921,8 @@ Window {
                                diffuseColor: sphere_node.is_connected ? (sphere_node.is_main ? "red" : (sphere_node.group_id === 1 ? modelColor1 : (sphere_node.group_id === 2 ? modelColor2 : (sphere_node.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
 
                            }
-                          // materials: edgeColor:Qt.rgba(1.0,0.0,0.0,1.0)
-                         //  materials:
                            Component.onCompleted: {
-                               // mymove(1,1,sphere_node) // 在这去更新 x y z
-                               // get_pos(sphere_node);
-                             //  console.log(_activeVehicle.Vehicle_count) // 好像没用了
 
-                             //  _sysid_list.push(1)     测
-                             // idpos_map[1] = [2,2,0]   试用
-
-                             //  screen_pos_to_world_pos(1,1,sphere_node)
                                hasset_map[1]=0
                            }
                            Connections {
@@ -1053,8 +944,6 @@ Window {
                                            update_other_airplane(sphere_node.set_main,sphere_node.set_main,sphere_node.group_id)
 
                                        console.log("pos1",sphere_node.model_x,sphere_node.model_y,sphere_node.model_z)
-                                     //  update_other_airplane(sphere_node.set_main)
-                                    //   if (sphere_node.set_main)set_main_behavior(sphere_node) // 时机不对,要全连接了再排他
 
                                    }
                                }
@@ -1102,17 +991,8 @@ Window {
                            property bool is_connected: false
                            property real select_color: 0.6
                            materials: DefaultMaterial {
-                           //    diffuseColor:"cyan"
                                opacity: sphere_node2.select_color
                                diffuseColor: sphere_node2.is_connected ? (sphere_node2.is_main ? "red" : (sphere_node2.group_id === 1 ? modelColor1 : (sphere_node2.group_id === 2 ? modelColor2 : (sphere_node2.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
-                           }
-                           Component.onCompleted: {
-                               // mymove(2,1,sphere_node2)
-                               // get_pos(sphere_node2);
-                             //  idpos_map[2] = [sphere_node2.model_x,sphere_node2.model_y,sphere_node2.model_z] // 测试用
-                             //  _sysid_list.push(2)     测
-                             // idpos_map[2] = [4,4,5]   试用
-                            //   screen_pos_to_world_pos(2,1,sphere_node2)
                            }
 
                            Connections {
@@ -1122,7 +1002,6 @@ Window {
                                        if (if_main_node(sphere_node2.objectName)) {sphere_node2.is_main = true;reset_main_name(sphere_node2.objectName,sysid)}
                                        sphere_node2.objectName = sysid
                                        _sysid_list.push(sysid)
-                                      // sphere_node2.pickable = true
                                        sphere_node2.is_connected = true
                                        idpos_map[sysid] = [sphere_node2.model_x,sphere_node2.model_y,sphere_node2.model_z]
                                        modelmp[sysid] = sphere_node2
@@ -1134,8 +1013,7 @@ Window {
                                            update_other_airplane(sphere_node2.set_main,sphere_node2.set_main,sphere_node2.group_id)
 
                                        console.log("pos2",sphere_node2.model_x,sphere_node2.model_y,sphere_node2.model_z)
-                                     //  update_other_airplane(sphere_node2.set_main)
-                                     //  if (sphere_node2.set_main)set_main_behavior(sphere_node2)
+
                                    }
                                }
                            }
@@ -1187,15 +1065,6 @@ Window {
                                diffuseColor: sphere_node3.is_connected ? (sphere_node3.is_main ? "red" : (sphere_node3.group_id === 1 ? modelColor1 : (sphere_node3.group_id === 2 ? modelColor2 : (sphere_node3.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(3,1,sphere_node3)
-                               // get_pos(sphere_node3);
-
-                             //  screen_pos_to_world_pos(3,1,sphere_node3)
-                            //   _sysid_list.push(3)   测
-                            //  idpos_map[3] = [4,4,0] 试用
-                             //  idpos_map[3] = [sphere_node3.model_x,sphere_node3.model_y,sphere_node3.model_z]
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1203,7 +1072,6 @@ Window {
                                        if (if_main_node(sphere_node3.objectName)) {sphere_node3.is_main = true;reset_main_name(sphere_node3.objectName,sysid)}
                                        sphere_node3.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node3.pickable = true
                                        sphere_node3.is_connected = true
                                        idpos_map[sysid] = [sphere_node3.model_x,sphere_node3.model_y,sphere_node3.model_z]
                                        modelmp[sysid] = sphere_node3
@@ -1260,16 +1128,9 @@ Window {
                            property real select_color: 0.6
                            materials: DefaultMaterial {
                                opacity: sphere_node4.select_color
-                              // diffuseColor: sphere_node4.is_main ? "red" : "cyan"
                                diffuseColor: sphere_node4.is_connected ? (sphere_node4.is_main ? "red" : (sphere_node4.group_id === 1 ? modelColor1 : (sphere_node4.group_id === 2 ? modelColor2 : (sphere_node4.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(4,1,sphere_node4)
-                               // get_pos(sphere_node4);
-                             //  screen_pos_to_world_pos(4,1,sphere_node4)
-                             //  idpos_map[4] = [sphere_node4.model_x,sphere_node4.model_y,sphere_node4.model_z]
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1278,7 +1139,6 @@ Window {
                                        sphere_node4.objectName = sysid
                                        _sysid_list.push(sysid)
                                        sphere_node4.is_connected = true
-                                      // sphere_node4.pickable = true
                                        idpos_map[sysid] = [sphere_node4.model_x,sphere_node4.model_y,sphere_node4.model_z]
                                        modelmp[sysid] = sphere_node4
                                        swarm_send.store_airplane_group(sysid, sphere_node4.group_id,false)
@@ -1337,11 +1197,6 @@ Window {
                                diffuseColor: sphere_node5.is_connected ? (sphere_node5.is_main ? "red" : (sphere_node5.group_id === 1 ? modelColor1 : (sphere_node5.group_id === 2 ? modelColor2 : (sphere_node5.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(5,1,sphere_node5)
-                               // get_pos(sphere_node5);
-                             //  screen_pos_to_world_pos(5,1,sphere_node5)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1350,7 +1205,6 @@ Window {
                                        sphere_node5.objectName = sysid
                                        _sysid_list.push(sysid)
                                        sphere_node5.is_connected = true
-                                      // sphere_node5.pickable = true
                                        idpos_map[sysid] = [sphere_node5.model_x,sphere_node5.model_y,sphere_node5.model_z]
                                        modelmp[sysid] = sphere_node5
                                        swarm_send.store_airplane_group(sysid, sphere_node5.group_id,false)
@@ -1409,11 +1263,6 @@ Window {
                                diffuseColor: sphere_node6.is_connected ? (sphere_node6.is_main ? "red" : (sphere_node6.group_id === 1 ? modelColor1 : (sphere_node6.group_id === 2 ? modelColor2 : (sphere_node6.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(6,1,sphere_node6)
-                               // get_pos(sphere_node6);
-                            //   screen_pos_to_world_pos(6,1,sphere_node6)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1421,7 +1270,6 @@ Window {
                                        if (if_main_node(sphere_node6.objectName)) {sphere_node6.is_main = true;reset_main_name(sphere_node6.objectName,sysid)}
                                        sphere_node6.objectName = sysid
                                        _sysid_list.push(sysid)
-                                      // sphere_node6.pickable = true
                                        sphere_node6.is_connected = true
                                        idpos_map[sysid] = [sphere_node6.model_x,sphere_node6.model_y,sphere_node6.model_z]
                                        modelmp[sysid] = sphere_node6
@@ -1481,11 +1329,6 @@ Window {
                                diffuseColor: sphere_node7.is_connected ? (sphere_node7.is_main ? "red" : (sphere_node7.group_id === 1 ? modelColor1 : (sphere_node7.group_id === 2 ? modelColor2 : (sphere_node7.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(7,1,sphere_node7)
-                               // get_pos(sphere_node7);
-                             //  screen_pos_to_world_pos(7,1,sphere_node7)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1493,7 +1336,6 @@ Window {
                                        if (if_main_node(sphere_node7.objectName)) {sphere_node7.is_main = true;reset_main_name(sphere_node7.objectName,sysid)}
                                        sphere_node7.objectName = sysid
                                        _sysid_list.push(sysid)
-                                      // sphere_node7.pickable = true
                                        sphere_node7.is_connected = true
                                        idpos_map[sysid] = [sphere_node7.model_x,sphere_node7.model_y,sphere_node7.model_z]
                                        modelmp[sysid] = sphere_node7
@@ -1553,11 +1395,6 @@ Window {
                                diffuseColor: sphere_node8.is_connected ? (sphere_node8.is_main ? "red" : (sphere_node8.group_id === 1 ? modelColor1 : (sphere_node8.group_id === 2 ? modelColor2 : (sphere_node8.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(8,1,sphere_node8)
-                               // get_pos(sphere_node8);
-                             //  screen_pos_to_world_pos(8,1,sphere_node8)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1624,11 +1461,6 @@ Window {
                                diffuseColor: sphere_node9.is_connected ? (sphere_node9.is_main ? "red" : (sphere_node9.group_id === 1 ? modelColor1 : (sphere_node9.group_id === 2 ? modelColor2 : (sphere_node9.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(9,1,sphere_node9)
-                               // get_pos(sphere_node9);
-                            //   screen_pos_to_world_pos(9,1,sphere_node9)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1695,11 +1527,6 @@ Window {
                                diffuseColor: sphere_node10.is_connected ? (sphere_node10.is_main ? "red" : (sphere_node10.group_id === 1 ? modelColor1 : (sphere_node10.group_id === 2 ? modelColor2 : (sphere_node10.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(10,1,sphere_node10)
-                               // get_pos(sphere_node10);
-                             //  screen_pos_to_world_pos(10,1,sphere_node10)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1765,11 +1592,6 @@ Window {
                                diffuseColor: sphere_node11.is_connected ? (sphere_node11.is_main ? "red" : (sphere_node11.group_id === 1 ? modelColor1 : (sphere_node11.group_id === 2 ? modelColor2 : (sphere_node11.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(11,1,sphere_node11)
-                               // get_pos(sphere_node11);
-                             //  screen_pos_to_world_pos(11,1,sphere_node11)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1777,7 +1599,6 @@ Window {
                                        if (if_main_node(sphere_node11.objectName)) {sphere_node11.is_main = true;reset_main_name(sphere_node11.objectName,sysid)}
                                        sphere_node11.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node11.is_connected = true
                                        idpos_map[sysid] = [sphere_node11.model_x,sphere_node11.model_y,sphere_node11.model_z]
                                        modelmp[sysid] = sphere_node11
@@ -1837,11 +1658,6 @@ Window {
                                diffuseColor: sphere_node12.is_connected ? (sphere_node12.is_main ? "red" : (sphere_node12.group_id === 1 ? modelColor1 : (sphere_node12.group_id === 2 ? modelColor2 : (sphere_node12.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(12,1,sphere_node12)
-                               // get_pos(sphere_node12);
-                             //  screen_pos_to_world_pos(12,1,sphere_node12)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1849,7 +1665,6 @@ Window {
                                        if (if_main_node(sphere_node12.objectName)) {sphere_node12.is_main = true;reset_main_name(sphere_node12.objectName,sysid)}
                                        sphere_node12.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node12.is_connected = true
                                        idpos_map[sysid] = [sphere_node12.model_x,sphere_node12.model_y,sphere_node12.model_z]
                                        modelmp[sysid] = sphere_node12
@@ -1910,11 +1725,6 @@ Window {
                                diffuseColor: sphere_node13.is_connected ? (sphere_node13.is_main ? "red" : (sphere_node13.group_id === 1 ? modelColor1 : (sphere_node13.group_id === 2 ? modelColor2 : (sphere_node13.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(13,1,sphere_node13)
-                               // get_pos(sphere_node13);
-                             //  screen_pos_to_world_pos(13,1,sphere_node13)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1922,7 +1732,6 @@ Window {
                                        if (if_main_node(sphere_node13.objectName)) {sphere_node13.is_main = true;reset_main_name(sphere_node13.objectName,sysid)}
                                        sphere_node13.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node13.is_connected = true
                                        idpos_map[sysid] = [sphere_node13.model_x,sphere_node13.model_y,sphere_node13.model_z]
                                        modelmp[sysid] = sphere_node13
@@ -1982,11 +1791,6 @@ Window {
                                diffuseColor: sphere_node14.is_connected ? (sphere_node14.is_main ? "red" : (sphere_node14.group_id === 1 ? modelColor1 : (sphere_node14.group_id === 2 ? modelColor2 : (sphere_node14.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(14,1,sphere_node14)
-                               // get_pos(sphere_node14);
-                            //   screen_pos_to_world_pos(14,1,sphere_node14)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -1994,7 +1798,6 @@ Window {
                                        if (if_main_node(sphere_node14.objectName)) {sphere_node14.is_main = true;reset_main_name(sphere_node14.objectName,sysid)}
                                        sphere_node14.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node14.is_connected = true
                                        idpos_map[sysid] = [sphere_node14.model_x,sphere_node14.model_y,sphere_node14.model_z]
                                        modelmp[sysid] = sphere_node14
@@ -2054,11 +1857,6 @@ Window {
                                diffuseColor: sphere_node15.is_connected ? (sphere_node15.is_main ? "red" : (sphere_node15.group_id === 1 ? modelColor1 : (sphere_node15.group_id === 2 ? modelColor2 : (sphere_node15.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(15,1,sphere_node15)
-                               // get_pos(sphere_node15);
-                             //  screen_pos_to_world_pos(15,1,sphere_node15)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2066,7 +1864,6 @@ Window {
                                        if (if_main_node(sphere_node15.objectName)) {sphere_node15.is_main = true;reset_main_name(sphere_node15.objectName,sysid)}
                                        sphere_node15.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node15.is_connected = true
                                        idpos_map[sysid] = [sphere_node15.model_x,sphere_node15.model_y,sphere_node15.model_z]
                                        modelmp[sysid] = sphere_node15
@@ -2126,11 +1923,6 @@ Window {
                                diffuseColor: sphere_node16.is_connected ? (sphere_node16.is_main ? "red" : (sphere_node16.group_id === 1 ? modelColor1 : (sphere_node16.group_id === 2 ? modelColor2 : (sphere_node16.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(16,1,sphere_node16)
-                               // get_pos(sphere_node16);
-                             //  screen_pos_to_world_pos(16,1,sphere_node16)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2138,7 +1930,6 @@ Window {
                                        if (if_main_node(sphere_node16.objectName)) {sphere_node16.is_main = true;reset_main_name(sphere_node16.objectName,sysid)}
                                        sphere_node16.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node16.is_connected = true
                                        idpos_map[sysid] = [sphere_node16.model_x,sphere_node16.model_y,sphere_node16.model_z]
                                        modelmp[sysid] = sphere_node16
@@ -2198,11 +1989,6 @@ Window {
                                diffuseColor: sphere_node17.is_connected ? (sphere_node17.is_main ? "red" : (sphere_node17.group_id === 1 ? modelColor1 : (sphere_node17.group_id === 2 ? modelColor2 : (sphere_node17.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(17,1,sphere_node17)
-                               // get_pos(sphere_node17);
-                             //  screen_pos_to_world_pos(17,1,sphere_node17)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2210,7 +1996,6 @@ Window {
                                        if (if_main_node(sphere_node17.objectName)) {sphere_node17.is_main = true;reset_main_name(sphere_node17.objectName,sysid)}
                                        sphere_node17.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node17.is_connected = true
                                        idpos_map[sysid] = [sphere_node17.model_x,sphere_node17.model_y,sphere_node17.model_z]
                                        modelmp[sysid] = sphere_node17
@@ -2270,11 +2055,6 @@ Window {
                                diffuseColor: sphere_node18.is_connected ? (sphere_node18.is_main ? "red" : (sphere_node18.group_id === 1 ? modelColor1 : (sphere_node18.group_id === 2 ? modelColor2 : (sphere_node18.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(18,1,sphere_node18)
-                               // get_pos(sphere_node18);
-                           //    screen_pos_to_world_pos(18,1,sphere_node18)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2282,7 +2062,7 @@ Window {
                                        if (if_main_node(sphere_node18.objectName)) {sphere_node18.is_main = true;reset_main_name(sphere_node18.objectName,sysid)}
                                        sphere_node18.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
+
                                        sphere_node18.is_connected = true
                                        idpos_map[sysid] = [sphere_node18.model_x,sphere_node18.model_y,sphere_node18.model_z]
                                        modelmp[sysid] = sphere_node18
@@ -2342,11 +2122,6 @@ Window {
                                diffuseColor: sphere_node19.is_connected ? (sphere_node19.is_main ? "red" : (sphere_node19.group_id === 1 ? modelColor1 : (sphere_node19.group_id === 2 ? modelColor2 : (sphere_node19.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(19,1,sphere_node19)
-                               // get_pos(sphere_node19);
-                             //  screen_pos_to_world_pos(19,1,sphere_node19)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2354,7 +2129,6 @@ Window {
                                        if (if_main_node(sphere_node19.objectName)) {sphere_node19.is_main = true;reset_main_name(sphere_node19.objectName,sysid)}
                                        sphere_node19.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node19.is_connected = true
                                        idpos_map[sysid] = [sphere_node19.model_x,sphere_node19.model_y,sphere_node19.model_z]
                                        modelmp[sysid] = sphere_node19
@@ -2414,11 +2188,6 @@ Window {
                                diffuseColor: sphere_node20.is_connected ? (sphere_node20.is_main ? "red" : (sphere_node20.group_id === 1 ? modelColor1 : (sphere_node20.group_id === 2 ? modelColor2 : (sphere_node20.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(20,1,sphere_node20)
-                               // get_pos(sphere_node20);
-                             //  screen_pos_to_world_pos(20,1,sphere_node20)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2426,7 +2195,6 @@ Window {
                                        if (if_main_node(sphere_node20.objectName)) {sphere_node20.is_main = true;reset_main_name(sphere_node20.objectName,sysid)}
                                        sphere_node20.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node20.is_connected = true
                                        idpos_map[sysid] = [sphere_node20.model_x,sphere_node20.model_y,sphere_node20.model_z]
                                        modelmp[sysid] = sphere_node20
@@ -2485,11 +2253,6 @@ Window {
                                diffuseColor: sphere_node21.is_connected ? (sphere_node21.is_main ? "red" : (sphere_node21.group_id === 1 ? modelColor1 : (sphere_node21.group_id === 2 ? modelColor2 : (sphere_node21.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(21,1,sphere_node21)
-                               // get_pos(sphere_node21);
-                              // screen_pos_to_world_pos(21,1,sphere_node21)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2497,7 +2260,6 @@ Window {
                                        if (if_main_node(sphere_node21.objectName)) {sphere_node21.is_main = true;reset_main_name(sphere_node21.objectName,sysid)}
                                        sphere_node21.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node21.is_connected = true
                                        idpos_map[sysid] = [sphere_node21.model_x,sphere_node21.model_y,sphere_node21.model_z]
                                        modelmp[sysid] = sphere_node21
@@ -2557,11 +2319,6 @@ Window {
                                opacity: sphere_node22.select_color
                            }
 
-                           Component.onCompleted: {
-                               // mymove(22,1,sphere_node22)
-                               // get_pos(sphere_node22);
-                              // screen_pos_to_world_pos(22,1,sphere_node22)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2569,7 +2326,6 @@ Window {
                                        if (if_main_node(sphere_node22.objectName)) {sphere_node22.is_main = true;reset_main_name(sphere_node22.objectName,sysid)}
                                        sphere_node22.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node22.is_connected = true
                                        idpos_map[sysid] = [sphere_node22.model_x,sphere_node22.model_y,sphere_node22.model_z]
                                        modelmp[sysid] = sphere_node22
@@ -2629,11 +2385,6 @@ Window {
                                opacity: sphere_node23.select_color
                            }
 
-                           Component.onCompleted: {
-                               // mymove(23,1,sphere_node23)
-                               // get_pos(sphere_node23);
-                              // screen_pos_to_world_pos(23,1,sphere_node23)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2641,7 +2392,6 @@ Window {
                                        if (if_main_node(sphere_node23.objectName)) {sphere_node23.is_main = true;reset_main_name(sphere_node23.objectName,sysid)}
                                        sphere_node23.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node23.is_connected = true
                                        idpos_map[sysid] = [sphere_node23.model_x,sphere_node23.model_y,sphere_node23.model_z]
                                        modelmp[sysid] = sphere_node23
@@ -2700,11 +2450,6 @@ Window {
                                diffuseColor: sphere_node24.is_connected ? (sphere_node24.is_main ? "red" : (sphere_node24.group_id === 1 ? modelColor1 : (sphere_node24.group_id === 2 ? modelColor2 : (sphere_node24.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(24,1,sphere_node24)
-                               // get_pos(sphere_node24);
-                             //  screen_pos_to_world_pos(24,1,sphere_node24)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2712,7 +2457,6 @@ Window {
                                        if (if_main_node(sphere_node24.objectName)) {sphere_node24.is_main = true;reset_main_name(sphere_node24.objectName,sysid)}
                                        sphere_node24.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node24.is_connected = true
                                        idpos_map[sysid] = [sphere_node24.model_x,sphere_node24.model_y,sphere_node24.model_z]
                                        modelmp[sysid] = sphere_node24
@@ -2772,12 +2516,6 @@ Window {
                                diffuseColor: sphere_node25.is_connected ? (sphere_node25.is_main ? "red" : (sphere_node25.group_id === 1 ? modelColor1 : (sphere_node25.group_id === 2 ? modelColor2 : (sphere_node25.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(25,1,sphere_node25)
-                               // get_pos(sphere_node25)
-
-                             //  screen_pos_to_world_pos(25,1,sphere_node25)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2785,7 +2523,6 @@ Window {
                                        if (if_main_node(sphere_node25.objectName)) {sphere_node25.is_main = true;reset_main_name(sphere_node25.objectName,sysid)}
                                        sphere_node25.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node25.is_connected = true
                                        idpos_map[sysid] = [sphere_node25.model_x,sphere_node25.model_y,sphere_node25.model_z]
                                        modelmp[sysid] = sphere_node25
@@ -2843,11 +2580,6 @@ Window {
                                diffuseColor: sphere_node26.is_connected ? (sphere_node26.is_main ? "red" : (sphere_node26.group_id === 1 ? modelColor1 : (sphere_node26.group_id === 2 ? modelColor2 : (sphere_node26.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(26,1,sphere_node26)
-                               // get_pos(sphere_node26);
-                            //   screen_pos_to_world_pos(26,1,sphere_node26)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2855,7 +2587,6 @@ Window {
                                        if (if_main_node(sphere_node26.objectName)) {sphere_node26.is_main = true;reset_main_name(sphere_node26.objectName,sysid)}
                                        sphere_node26.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node26.is_connected = true
                                        idpos_map[sysid] = [sphere_node26.model_x,sphere_node26.model_y,sphere_node26.model_z]
                                        modelmp[sysid] = sphere_node26
@@ -2914,11 +2645,6 @@ Window {
                                diffuseColor: sphere_node27.is_connected ? (sphere_node27.is_main ? "red" : (sphere_node27.group_id === 1 ? modelColor1 : (sphere_node27.group_id === 2 ? modelColor2 : (sphere_node27.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(27,1,sphere_node27)
-                               // get_pos(sphere_node27);
-                             //  screen_pos_to_world_pos(27,1,sphere_node27)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2926,7 +2652,6 @@ Window {
                                        if (if_main_node(sphere_node27.objectName)) {sphere_node27.is_main = true;reset_main_name(sphere_node27.objectName,sysid)}
                                        sphere_node27.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node27.is_connected = true
                                        idpos_map[sysid] = [sphere_node27.model_x,sphere_node27.model_y,sphere_node27.model_z]
                                        modelmp[sysid] = sphere_node27
@@ -2985,11 +2710,6 @@ Window {
                                diffuseColor: sphere_node28.is_connected ? (sphere_node28.is_main ? "red" : (sphere_node28.group_id === 1 ? modelColor1 : (sphere_node28.group_id === 2 ? modelColor2 : (sphere_node28.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(1,2,sphere_node28)
-                               // get_pos(sphere_node28);
-                             //  screen_pos_to_world_pos(1,2,sphere_node28)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -2997,7 +2717,6 @@ Window {
                                        if (if_main_node(sphere_node28.objectName)) {sphere_node28.is_main = true;reset_main_name(sphere_node28.objectName,sysid)}
                                        sphere_node28.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node28.is_connected = true
                                        idpos_map[sysid] = [sphere_node28.model_x,sphere_node28.model_y,sphere_node28.model_z]
                                        modelmp[sysid] = sphere_node28
@@ -3056,11 +2775,6 @@ Window {
                                diffuseColor: sphere_node29.is_connected ? (sphere_node29.is_main ? "red" : (sphere_node29.group_id === 1 ? modelColor1 : (sphere_node29.group_id === 2 ? modelColor2 : (sphere_node29.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(2,2,sphere_node29)
-                               // get_pos(sphere_node29);
-                              // screen_pos_to_world_pos(2,2,sphere_node29)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3068,7 +2782,6 @@ Window {
                                        if (if_main_node(sphere_node29.objectName)) {sphere_node29.is_main = true;reset_main_name(sphere_node29.objectName,sysid)}
                                        sphere_node29.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node29.is_connected = true
                                        idpos_map[sysid] = [sphere_node29.model_x,sphere_node29.model_y,sphere_node29.model_z]
                                        modelmp[sysid] = sphere_node29
@@ -3127,11 +2840,6 @@ Window {
                                diffuseColor: sphere_node30.is_connected ? (sphere_node30.is_main ? "red" : (sphere_node30.group_id === 1 ? modelColor1 : (sphere_node30.group_id === 2 ? modelColor2 : (sphere_node30.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(3,2,sphere_node30)
-                               // get_pos(sphere_node30);
-                              // screen_pos_to_world_pos(3,2,sphere_node30)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3139,7 +2847,6 @@ Window {
                                        if (if_main_node(sphere_node30.objectName)) {sphere_node30.is_main = true;reset_main_name(sphere_node30.objectName,sysid)}
                                        sphere_node30.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node30.is_connected = true
                                        idpos_map[sysid] = [sphere_node30.model_x,sphere_node30.model_y,sphere_node30.model_z]
                                        modelmp[sysid] = sphere_node30
@@ -3198,11 +2905,6 @@ Window {
                                diffuseColor: sphere_node31.is_connected ? (sphere_node31.is_main ? "red" : (sphere_node31.group_id === 1 ? modelColor1 : (sphere_node31.group_id === 2 ? modelColor2 : (sphere_node31.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(4,2,sphere_node31)
-                               // get_pos(sphere_node31);
-                              // screen_pos_to_world_pos(4,2,sphere_node31)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3210,7 +2912,6 @@ Window {
                                        if (if_main_node(sphere_node31.objectName)) {sphere_node31.is_main = true;reset_main_name(sphere_node31.objectName,sysid)}
                                        sphere_node31.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node31.is_connected = true
                                        idpos_map[sysid] = [sphere_node31.model_x,sphere_node31.model_y,sphere_node31.model_z]
                                        modelmp[sysid] = sphere_node31
@@ -3269,11 +2970,6 @@ Window {
                                diffuseColor: sphere_node32.is_connected ? (sphere_node32.is_main ? "red" : (sphere_node32.group_id === 1 ? modelColor1 : (sphere_node32.group_id === 2 ? modelColor2 : (sphere_node32.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(5,2,sphere_node32)
-                               // get_pos(sphere_node32);
-                             //  screen_pos_to_world_pos(5,2,sphere_node32)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3281,7 +2977,6 @@ Window {
                                        if (if_main_node(sphere_node32.objectName)) {sphere_node32.is_main = true;reset_main_name(sphere_node32.objectName,sysid)}
                                        sphere_node32.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node32.is_connected = true
                                        idpos_map[sysid] = [sphere_node32.model_x,sphere_node32.model_y,sphere_node32.model_z]
                                        modelmp[sysid] = sphere_node32
@@ -3339,11 +3034,6 @@ Window {
                                diffuseColor: sphere_node33.is_connected ? (sphere_node33.is_main ? "red" : (sphere_node33.group_id === 1 ? modelColor1 : (sphere_node33.group_id === 2 ? modelColor2 : (sphere_node33.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(6,2,sphere_node33)
-                               // get_pos(sphere_node33);
-                             //  screen_pos_to_world_pos(6,2,sphere_node33)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3351,7 +3041,6 @@ Window {
                                        if (if_main_node(sphere_node33.objectName)) {sphere_node33.is_main = true;reset_main_name(sphere_node33.objectName,sysid)}
                                        sphere_node33.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node33.is_connected = true
                                        idpos_map[sysid] = [sphere_node33.model_x,sphere_node33.model_y,sphere_node33.model_z]
                                        modelmp[sysid] = sphere_node33
@@ -3409,11 +3098,6 @@ Window {
                                diffuseColor: sphere_node34.is_connected ? (sphere_node34.is_main ? "red" : (sphere_node34.group_id === 1 ? modelColor1 : (sphere_node34.group_id === 2 ? modelColor2 : (sphere_node34.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(7,2,sphere_node34)
-                               // get_pos(sphere_node34);
-                              // screen_pos_to_world_pos(7,2,sphere_node34)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3421,7 +3105,6 @@ Window {
                                        if (if_main_node(sphere_node34.objectName)) {sphere_node34.is_main = true;reset_main_name(sphere_node34.objectName,sysid)}
                                        sphere_node34.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node34.is_connected = true
                                        idpos_map[sysid] = [sphere_node34.model_x,sphere_node34.model_y,sphere_node34.model_z]
                                        modelmp[sysid] = sphere_node34
@@ -3480,11 +3163,6 @@ Window {
                                diffuseColor: sphere_node35.is_connected ? (sphere_node35.is_main ? "red" : (sphere_node35.group_id === 1 ? modelColor1 : (sphere_node35.group_id === 2 ? modelColor2 : (sphere_node35.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(8,2,sphere_node35)
-                               // get_pos(sphere_node35);
-                              // screen_pos_to_world_pos(8,2,sphere_node35)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3492,7 +3170,6 @@ Window {
                                        if (if_main_node(sphere_node35.objectName)) {sphere_node35.is_main = true;reset_main_name(sphere_node35.objectName,sysid)}
                                        sphere_node35.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node35.is_connected = true
                                        idpos_map[sysid] = [sphere_node35.model_x,sphere_node35.model_y,sphere_node35.model_z]
                                        modelmp[sysid] = sphere_node35
@@ -3550,11 +3227,6 @@ Window {
                                diffuseColor: sphere_node36.is_connected ? (sphere_node36.is_main ? "red" : (sphere_node36.group_id === 1 ? modelColor1 : (sphere_node36.group_id === 2 ? modelColor2 : (sphere_node36.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(9,2,sphere_node36)
-                               // get_pos(sphere_node36);
-                             //  screen_pos_to_world_pos(9,2,sphere_node36)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3562,7 +3234,6 @@ Window {
                                        if (if_main_node(sphere_node36.objectName)) {sphere_node36.is_main = true;reset_main_name(sphere_node36.objectName,sysid)}
                                        sphere_node36.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node36.is_connected = true
                                        idpos_map[sysid] = [sphere_node36.model_x,sphere_node36.model_y,sphere_node36.model_z]
                                        modelmp[sysid] = sphere_node36
@@ -3621,11 +3292,6 @@ Window {
                                diffuseColor: sphere_node37.is_connected ? (sphere_node37.is_main ? "red" : (sphere_node37.group_id === 1 ? modelColor1 : (sphere_node37.group_id === 2 ? modelColor2 : (sphere_node37.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(10,2,sphere_node37)
-                               // get_pos(sphere_node37);
-                              // screen_pos_to_world_pos(10,2,sphere_node37)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3633,7 +3299,6 @@ Window {
                                        if (if_main_node(sphere_node37.objectName)) {sphere_node37.is_main = true;reset_main_name(sphere_node37.objectName,sysid)}
                                        sphere_node37.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node37.is_connected = true
                                        idpos_map[sysid] = [sphere_node37.model_x,sphere_node37.model_y,sphere_node37.model_z]
                                        modelmp[sysid] = sphere_node37
@@ -3692,11 +3357,6 @@ Window {
                                diffuseColor: sphere_node38.is_connected ? (sphere_node38.is_main ? "red" : (sphere_node38.group_id === 1 ? modelColor1 : (sphere_node38.group_id === 2 ? modelColor2 : (sphere_node38.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(11,2,sphere_node38)
-                               // get_pos(sphere_node38);
-                              // screen_pos_to_world_pos(11,2,sphere_node38)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3704,7 +3364,6 @@ Window {
                                        if (if_main_node(sphere_node38.objectName)) {sphere_node38.is_main = true;reset_main_name(sphere_node38.objectName,sysid)}
                                        sphere_node38.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node38.is_connected = true
                                        idpos_map[sysid] = [sphere_node38.model_x,sphere_node38.model_y,sphere_node38.model_z]
                                        modelmp[sysid] = sphere_node38
@@ -3763,11 +3422,6 @@ Window {
                                diffuseColor: sphere_node39.is_connected ? (sphere_node39.is_main ? "red" : (sphere_node39.group_id === 1 ? modelColor1 : (sphere_node39.group_id === 2 ? modelColor2 : (sphere_node39.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(12,2,sphere_node39)
-                               // get_pos(sphere_node39);
-                             //  screen_pos_to_world_pos(12,2,sphere_node39)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3775,7 +3429,6 @@ Window {
                                        if (if_main_node(sphere_node39.objectName)) {sphere_node39.is_main = true;reset_main_name(sphere_node39.objectName,sysid)}
                                        sphere_node39.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node39.is_connected = true
                                        idpos_map[sysid] = [sphere_node39.model_x,sphere_node39.model_y,sphere_node39.model_z]
                                        modelmp[sysid] = sphere_node39
@@ -3834,11 +3487,6 @@ Window {
                                diffuseColor: sphere_node40.is_connected ? (sphere_node40.is_main ? "red" : (sphere_node40.group_id === 1 ? modelColor1 : (sphere_node40.group_id === 2 ? modelColor2 : (sphere_node40.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(13,2,sphere_node40)
-                               // get_pos(sphere_node40);
-                             //  screen_pos_to_world_pos(13,2,sphere_node40)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3846,7 +3494,6 @@ Window {
                                        if (if_main_node(sphere_node40.objectName)) {sphere_node40.is_main = true;reset_main_name(sphere_node40.objectName,sysid)}
                                        sphere_node40.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node40.is_connected = true
                                        idpos_map[sysid] = [sphere_node40.model_x,sphere_node40.model_y,sphere_node40.model_z]
                                        modelmp[sysid] = sphere_node40
@@ -3905,11 +3552,6 @@ Window {
                                diffuseColor: sphere_node41.is_connected ? (sphere_node41.is_main ? "red" : (sphere_node41.group_id === 1 ? modelColor1 : (sphere_node41.group_id === 2 ? modelColor2 : (sphere_node41.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(14,2,sphere_node41)
-                               // get_pos(sphere_node41);
-                              // screen_pos_to_world_pos(14,2,sphere_node41)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3917,7 +3559,6 @@ Window {
                                        if (if_main_node(sphere_node41.objectName)) {sphere_node41.is_main = true;reset_main_name(sphere_node41.objectName,sysid)}
                                        sphere_node41.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node41.is_connected = true
                                        idpos_map[sysid] = [sphere_node41.model_x,sphere_node41.model_y,sphere_node41.model_z]
                                        modelmp[sysid] = sphere_node41
@@ -3976,11 +3617,6 @@ Window {
                                diffuseColor: sphere_node42.is_connected ? (sphere_node42.is_main ? "red" : (sphere_node42.group_id === 1 ? modelColor1 : (sphere_node42.group_id === 2 ? modelColor2 : (sphere_node42.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(15,2,sphere_node42)
-                               // get_pos(sphere_node42);
-                             //  screen_pos_to_world_pos(15,2,sphere_node42)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -3988,7 +3624,6 @@ Window {
                                        if (if_main_node(sphere_node42.objectName)) {sphere_node42.is_main = true;reset_main_name(sphere_node42.objectName,sysid)}
                                        sphere_node42.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node42.is_connected = true
                                        idpos_map[sysid] = [sphere_node42.model_x,sphere_node42.model_y,sphere_node42.model_z]
                                        modelmp[sysid] = sphere_node42
@@ -4047,11 +3682,6 @@ Window {
                                diffuseColor: sphere_node43.is_connected ? (sphere_node43.is_main ? "red" : (sphere_node43.group_id === 1 ? modelColor1 : (sphere_node43.group_id === 2 ? modelColor2 : (sphere_node43.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(16,2,sphere_node43)
-                               // get_pos(sphere_node43);
-                             //  screen_pos_to_world_pos(16,2,sphere_node43)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4059,7 +3689,6 @@ Window {
                                        if (if_main_node(sphere_node43.objectName)) {sphere_node43.is_main = true;reset_main_name(sphere_node43.objectName,sysid)}
                                        sphere_node43.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node43.is_connected = true
                                        idpos_map[sysid] = [sphere_node43.model_x,sphere_node43.model_y,sphere_node43.model_z]
                                        modelmp[sysid] = sphere_node43
@@ -4118,11 +3747,6 @@ Window {
                                diffuseColor: sphere_node44.is_connected ? (sphere_node44.is_main ? "red" : (sphere_node44.group_id === 1 ? modelColor1 : (sphere_node44.group_id === 2 ? modelColor2 : (sphere_node44.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(17,2,sphere_node44)
-                               // get_pos(sphere_node44);
-                             //  screen_pos_to_world_pos(17,2,sphere_node44)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4130,7 +3754,6 @@ Window {
                                        if (if_main_node(sphere_node44.objectName)) {sphere_node44.is_main = true;reset_main_name(sphere_node44.objectName,sysid)}
                                        sphere_node44.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node44.is_connected = true
                                        idpos_map[sysid] = [sphere_node44.model_x,sphere_node44.model_y,sphere_node44.model_z]
                                        modelmp[sysid] = sphere_node44
@@ -4189,11 +3812,6 @@ Window {
                                diffuseColor: sphere_node45.is_connected ? (sphere_node45.is_main ? "red" : (sphere_node45.group_id === 1 ? modelColor1 : (sphere_node45.group_id === 2 ? modelColor2 : (sphere_node45.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(18,2,sphere_node45)
-                               // get_pos(sphere_node45);
-                             //  screen_pos_to_world_pos(18,2,sphere_node45)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4201,7 +3819,6 @@ Window {
                                        if (if_main_node(sphere_node45.objectName)) {sphere_node45.is_main = true;reset_main_name(sphere_node45.objectName,sysid)}
                                        sphere_node45.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node45.is_connected = true
                                        idpos_map[sysid] = [sphere_node45.model_x,sphere_node45.model_y,sphere_node45.model_z]
                                        modelmp[sysid] = sphere_node45
@@ -4260,11 +3877,6 @@ Window {
                                diffuseColor: sphere_node46.is_connected ? (sphere_node46.is_main ? "red" : (sphere_node46.group_id === 1 ? modelColor1 : (sphere_node46.group_id === 2 ? modelColor2 : (sphere_node46.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(19,2,sphere_node46)
-                               // get_pos(sphere_node46);
-                             //  screen_pos_to_world_pos(19,2,sphere_node46)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4272,7 +3884,6 @@ Window {
                                        if (if_main_node(sphere_node46.objectName)) {sphere_node46.is_main = true;reset_main_name(sphere_node46.objectName,sysid)}
                                        sphere_node46.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node46.is_connected = true
                                        idpos_map[sysid] = [sphere_node46.model_x,sphere_node46.model_y,sphere_node46.model_z]
                                        modelmp[sysid] = sphere_node46
@@ -4331,11 +3942,6 @@ Window {
                                diffuseColor: sphere_node47.is_connected ? (sphere_node47.is_main ? "red" : (sphere_node47.group_id === 1 ? modelColor1 : (sphere_node47.group_id === 2 ? modelColor2 : (sphere_node47.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(20,2,sphere_node47)
-                               // get_pos(sphere_node47);
-                              // screen_pos_to_world_pos(20,2,sphere_node47)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4343,7 +3949,6 @@ Window {
                                        if (if_main_node(sphere_node47.objectName)) {sphere_node47.is_main = true;reset_main_name(sphere_node47.objectName,sysid)}
                                        sphere_node47.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node47.is_connected = true
                                        idpos_map[sysid] = [sphere_node47.model_x,sphere_node47.model_y,sphere_node47.model_z]
                                        modelmp[sysid] = sphere_node47
@@ -4402,11 +4007,6 @@ Window {
                                diffuseColor: sphere_node48.is_connected ? (sphere_node48.is_main ? "red" : (sphere_node48.group_id === 1 ? modelColor1 : (sphere_node48.group_id === 2 ? modelColor2 : (sphere_node48.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(21,2,sphere_node48)
-                               // get_pos(sphere_node48);
-                             //  screen_pos_to_world_pos(21,2,sphere_node48)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4414,7 +4014,6 @@ Window {
                                        if (if_main_node(sphere_node48.objectName)) {sphere_node48.is_main = true;reset_main_name(sphere_node48.objectName,sysid)}
                                        sphere_node48.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node48.is_connected = true
                                        idpos_map[sysid] = [sphere_node48.model_x,sphere_node48.model_y,sphere_node48.model_z]
                                        modelmp[sysid] = sphere_node48
@@ -4473,11 +4072,6 @@ Window {
                                diffuseColor: sphere_node49.is_connected ? (sphere_node49.is_main ? "red" : (sphere_node49.group_id === 1 ? modelColor1 : (sphere_node49.group_id === 2 ? modelColor2 : (sphere_node49.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(22,2,sphere_node49)
-                               // get_pos(sphere_node49);
-                             //  screen_pos_to_world_pos(22,2,sphere_node49)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4485,7 +4079,6 @@ Window {
                                        if (if_main_node(sphere_node49.objectName)) {sphere_node49.is_main = true;reset_main_name(sphere_node49.objectName,sysid)}
                                        sphere_node49.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node49.is_connected = true
                                        idpos_map[sysid] = [sphere_node49.model_x,sphere_node49.model_y,sphere_node49.model_z]
                                        modelmp[sysid] = sphere_node49
@@ -4544,11 +4137,6 @@ Window {
                                diffuseColor: sphere_node50.is_connected ? (sphere_node50.is_main ? "red" : (sphere_node50.group_id === 1 ? modelColor1 : (sphere_node50.group_id === 2 ? modelColor2 : (sphere_node50.group_id === 3 ? modelColor3 : modelColor4)))) : "#646566"
                            }
 
-                           Component.onCompleted: {
-                               // mymove(23,2,sphere_node50)
-                               // get_pos(sphere_node50);
-                            //   screen_pos_to_world_pos(23,2,sphere_node50)
-                           }
                            Connections {
                                target: QGroundControl.multiVehicleManager  //cpp模块
                                function onMydatachanged(n,sysid) { // cpp发信号
@@ -4556,7 +4144,6 @@ Window {
                                        if (if_main_node(sphere_node50.objectName)) {sphere_node50.is_main = true;reset_main_name(sphere_node50.objectName,sysid)}
                                        sphere_node50.objectName = sysid
                                        _sysid_list.push(sysid)
-                                     //  sphere_node8.pickable = true
                                        sphere_node50.is_connected = true
                                        idpos_map[sysid] = [sphere_node50.model_x,sphere_node50.model_y,sphere_node50.model_z]
                                        modelmp[sysid] = sphere_node50
@@ -4603,25 +4190,11 @@ Window {
                            onPressed: {
                                var if_right = pressedButtons & Qt.RightButton
 
-                               //获取点在View上的屏幕坐标
-                 //              pick_screen.text = "(" + mouse.x + ", " + mouse.y + ")"  不用了
-                               //pick取与该点射线路径相交的离最近的Model的信息，返回PickResult对象
-                               //因为该模块一直在迭代，新的版本可以从PickResult对象获取更多的信息
-                               //Qt6中还提供了pickAll获取与该射线相交的所有Model信息
                                var result = control.pick(mouse.x, mouse.y)
                                //目前只在点击时更新了pick物体的信息
-                           //    Keys.rightPressed
                                if (result.objectHit) {
                                    pickNode = result.objectHit
-                               //    pick_name.text = pickNode.objectName    改掉了  不用了
-                                 //  pick_distance.text = result.distance.toFixed(2)
-                               /*    pick_word.text = "("
-                                           + result.scenePosition.x.toFixed(2) + ", "
-                                           + result.scenePosition.y.toFixed(2) + ", "
-                                           + result.scenePosition.z.toFixed(2) + ")" */
-
                                    var map_from = control.mapFrom3DScene(pickNode.scenePosition)
-                                   //var map_to = control.mapTo3DScene(Qt.vector3d(mouse.x,mouse.y,map_from.z))
 
                                    xOffset = map_from.x - mouse.x
                                    yOffset = map_from.y - mouse.y
@@ -4644,9 +4217,6 @@ Window {
                                    }
                                } else {
                                    pickNode = null
-                             //      pick_name.text = "None"
-                              //     pick_distance.text = " "
-                             //      pick_word.text = " "
 
                                    // 清空相对坐标显示
                                    updateRelativePosition(null)
@@ -4657,12 +4227,7 @@ Window {
                                }
 
                            }
-                          /* onReleased: {
-                              // if (pickNode) {
-                                //   send_all_airplane_pos()
-                                   console.log("released")
-                              // }
-                           }*/
+
                            onPositionChanged: {
                                if(!mouse_area.containsMouse || !pickNode){
                                    return
@@ -4682,7 +4247,6 @@ Window {
                                if (((map_from_1.x -20) % 40 <= 1 || (map_from_1.x -20) % 40 >= 39) && ((map_from_1.y-20) % 40 <= 1 || (map_from_1.y-20) % 40 >= 39)) {
                                    return
                                }
-                         //      console.log(map_from_1.x,map_from_1.y)
                                var nu_x = (map_from_1.x-20) % 40 > 20 ? map_from_1.x + 40 - (map_from_1.x-20) % 40 : map_from_1.x - (map_from_1.x-20) % 40;
                                var nu_y = (map_from_1.y-20) % 40 > 20 ? map_from_1.y + 40 - (map_from_1.y-20) % 40 : map_from_1.y - (map_from_1.y-20) % 40;
 
@@ -4752,13 +4316,7 @@ Window {
 
                                    send_all_airplane_pos(pickNode.group_id,0)
                                }
-                             //  console.log(pickNode.objectName,idpos_map[Number(pickNode.objectName)][0],idpos_map[Number(pickNode.objectName)][1])
-                              /* if (pickNode.is_connected) {
-                                   get_pos(pickNode)
-                                   idpos_map[Number(pickNode.objectName)][0] = myIntx
-                                   idpos_map[Number(pickNode.objectName)][1] = myInty
-                                   send_all_airplane_pos()
-                               }*/
+
                            }
 
                            WheelHandler {
@@ -4780,76 +4338,6 @@ Window {
                            }
 
                        }
-
-                       // Myvehicle {
-                       //        id: myVehicleInstance // 给车辆实例一个唯一ID，方便后续引用
-                       //        position: Qt.vector3d(0, 0, 0) // 初始位置
-                       //       // eulerRotation.x: 90 // 模型姿态调整
-                       //        scale: Qt.vector3d(3, 3, 3) // 缩放
-                       //        Text {
-                       //            id: name1
-                       //           // text:"  56"
-                       //            text: "  " + myVehicleInstance.objectName + "_" + myVehicleInstance.group_id
-                       //            font.pixelSize: 62
-                       //            rotation:0
-                       //          //  color: myVehicleInstance.set_main ? "red":"black"
-                       //            y:-100
-                       //        }
-
-                       //        objectName: "4"
-                       //        x: 0
-                       //        y: 1
-                       //        //scale: Qt.vector3d(1,1,0.1)
-                       //        z: 5
-                       //        visible: true
-                       //       function loadModel() {
-                       //            visible = true;
-                       //        }
-
-                       //        property int model_x : 0
-                       //        property int model_y : 0
-                       //        property int model_z : 0
-                       //        property int group_id: 1
-                       //        property bool is_main: false
-                       //        property bool set_main: false
-                       //        property bool is_connected: false
-                       //        property real select_color: 0.6
-                       //    }
-
-                       // Myvehicle {
-                       //        id: myVehicleInstance2 // 给车辆实例一个唯一ID，方便后续引用
-                       //        position: Qt.vector3d(100, 100, 0) // 初始位置
-                       //        eulerRotation.x: 90 // 模型姿态调整
-                       //        scale: Qt.vector3d(3, 3, 3) // 缩放
-                       //        Text {
-                       //            id: name2
-                       //            text: "  " + myVehicleInstance2.objectName + "_" + myVehicleInstance2.group_id
-                       //            font.pixelSize: 62
-                       //          //  color: myVehicleInstance.set_main ? "red":"black"
-                       //            y:-100
-                       //        }
-                       //        objectName: "5"
-                       //        x: 0
-                       //        y: 1
-                       //        //scale: Qt.vector3d(1,1,0.1)
-                       //        z: 5
-                       //        visible: true
-                       //       function loadModel() {
-                       //            visible = true;
-                       //        }
-
-                       //        property int model_x : 0
-                       //        property int model_y : 0
-                       //        property int model_z : 0
-                       //        property int group_id: 1
-                       //        property bool is_main: false
-                       //        property bool set_main: false
-                       //        property bool is_connected: false
-                       //        property real select_color: 0.6
-                       //    }
-
-                // 您的3D场景内容保持不变
-                // ......
 
                 }
 
@@ -4888,17 +4376,6 @@ Window {
                 anchors.fill: parent
                 anchors.margins: 15
                 spacing: 20
-
-                // // 分组管理标题 不需要了
-                // Label {
-                //     text: "分组管理"
-                //     font.bold: true
-                //     font.pixelSize: 18
-                //     color: accentColor
-                //     Layout.alignment: Qt.AlignHCenter
-                // }
-
-
 
                 // 分组设置
                 GroupBox {
@@ -5053,57 +4530,8 @@ Window {
                                             }
                                             main_node_name[1] = plan_arr[minIdx2].objectName
                                             set_main_name(plan_arr[minIdx2])
-                                            if(plan_arr[minIdx2].is_connected === true)set_main_color(plan_arr[minIdx2].objectName)/*
-                if (modelmp[main_node_name[0]].is_connected === true)
-                                            swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
-                                                              idpos_map[main_node_name[0]][0],
-                                                              idpos_map[main_node_name[0]][1],
-                                                              idpos_map[main_node_name[0]][2])
-                if (modelmp[main_node_name[1]].is_connected === true)
-                                            swarm_send.set_main_airplane(main_node_name[1], modelmp[main_node_name[1]].group_id,
-                                                              idpos_map[main_node_name[1]][0],
-                                                              idpos_map[main_node_name[1]][1],
-                                                              idpos_map[main_node_name[1]][2])
-                */
-                                        /*
-                                            var j = 0
-                                            for (var i = 0; i < _sysid_list.length; i++) {
-                                                if (i < _sysid_list.length / 2) {
-                                                    modelmp[_sysid_list[i]].group_id = 1 // 把前一半变成第1组   保证和设置主机的group-1对应
-                                                    j = i
-                                                } else {
-                                                     modelmp[_sysid_list[i]].group_id = 2
-                                                }
-                                                swarm_send.store_airplane_group(_sysid_list[i], modelmp[_sysid_list[i]].group_id, true)
-                                            }
-                                            main_node_name.length = 2
-                                            for (var n0 = 0; n0 < _sysid_list.length / 2; n0++) {
-                                                if (if_main_node(modelmp[_sysid_list[n0]].objectName)) {
-                                                    main_node_name[0] = modelmp[_sysid_list[n0]].objectName
-                                                    set_main_color(modelmp[_sysid_list[n0]].objectName)
-                                                    break;
-                                                }
+                                            if(plan_arr[minIdx2].is_connected === true)set_main_color(plan_arr[minIdx2].objectName)
 
-                                                main_node_name[0] = modelmp[_sysid_list[n0]].objectName
-                                                set_main_color(modelmp[_sysid_list[n0]].objectName)
-                                            }
-                                            for (var n1 = j + 1; n1 < _sysid_list.length; n1++) {
-                                                if (if_main_node(modelmp[_sysid_list[n1]].objectName)) {
-                                                    main_node_name[1] = modelmp[_sysid_list[n1]].objectName
-                                                    set_main_color(modelmp[_sysid_list[n1]].objectName)
-                                                    break;
-                                                }
-                                                main_node_name[1] = modelmp[_sysid_list[n1]].objectName
-                                                set_main_color(modelmp[_sysid_list[n1]].objectName)
-                                            }
-                                            swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
-                                                              idpos_map[main_node_name[0]][0],
-                                                              idpos_map[main_node_name[0]][1],
-                                                              idpos_map[main_node_name[0]][2])
-                                            swarm_send.set_main_airplane(main_node_name[1], modelmp[main_node_name[1]].group_id,
-                                                              idpos_map[main_node_name[1]][0],
-                                                              idpos_map[main_node_name[1]][1],
-                                                              idpos_map[main_node_name[1]][2])*/
                                             send_all_airplane_pos(2,0)
 
                                             group_num = 2
@@ -5196,18 +4624,6 @@ Window {
                                             set_main_name(plan_arr[minIdx3_3])
                                             if(plan_arr[minIdx3_3].is_connected === true)set_main_color(plan_arr[minIdx3_3].objectName)
 
-                                         /*   swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
-                                                              idpos_map[main_node_name[0]][0],
-                                                              idpos_map[main_node_name[0]][1],
-                                                              idpos_map[main_node_name[0]][2])
-                                            swarm_send.set_main_airplane(main_node_name[1], modelmp[main_node_name[1]].group_id,
-                                                              idpos_map[main_node_name[1]][0],
-                                                              idpos_map[main_node_name[1]][1],
-                                                              idpos_map[main_node_name[1]][2])
-                                            swarm_send.set_main_airplane(main_node_name[2], modelmp[main_node_name[2]].group_id,
-                                                              idpos_map[main_node_name[2]][0],
-                                                              idpos_map[main_node_name[2]][1],
-                                                              idpos_map[main_node_name[2]][2])*/
                                             send_all_airplane_pos(3,0)
 
                                             group_num = 3
@@ -5322,23 +4738,7 @@ Window {
                                                 set_main_name(plan_arr[minIdx4_4])
                                                 if(plan_arr[minIdx4_4].is_connected === true)set_main_color(plan_arr[minIdx4_4].objectName)
                                             }
-                /*
-                                            swarm_send.set_main_airplane(main_node_name[0], modelmp[main_node_name[0]].group_id,
-                                                              idpos_map[main_node_name[0]][0],
-                                                              idpos_map[main_node_name[0]][1],
-                                                              idpos_map[main_node_name[0]][2])
-                                            swarm_send.set_main_airplane(main_node_name[1], modelmp[main_node_name[1]].group_id,
-                                                              idpos_map[main_node_name[1]][0],
-                                                              idpos_map[main_node_name[1]][1],
-                                                              idpos_map[main_node_name[1]][2])
-                                            swarm_send.set_main_airplane(main_node_name[2], modelmp[main_node_name[2]].group_id,
-                                                              idpos_map[main_node_name[2]][0],
-                                                              idpos_map[main_node_name[2]][1],
-                                                              idpos_map[main_node_name[2]][2])
-                                            swarm_send.set_main_airplane(main_node_name[3], modelmp[main_node_name[3]].group_id,
-                                                              idpos_map[main_node_name[3]][0],
-                                                              idpos_map[main_node_name[3]][1],
-                                                              idpos_map[main_node_name[3]][2])*/
+
                                             send_all_airplane_pos(4,0) // 四组全更新
                                             group_num = 4
 
@@ -5568,12 +4968,12 @@ Window {
                                         moveGroupToPositionWithCollision(targetGroupId, newPos);
                                     }
 
-                                    // 重新调整所有组的模型位置到各自区域居中
+                                    // 重新调整所有组的模型位置到各自区域居中（保持原有队形）
                                     for(var grpIdx in grp_pos_mp) {
                                         var gid = Number(grpIdx);
                                         var gpos = grp_pos_mp[grpIdx];
                                         if(gpos > 0) {
-                                            move_model(gpos, newGroupNum);
+                                            moveGroupKeepFormation(gid, gpos);
                                         }
                                     }
 
@@ -5995,7 +5395,7 @@ Window {
                                 updateRelativePosition(mouse_area.pickNode)  // 更新相对坐标
                                     if (!mouse_area.pickNode.is_connected) return
                                     mouse_area.pickNode.is_main = true
-                                  //  swarm_send.set_main_airplane(main_node_name[node.group_id - 1], node.group_id, 0, 0, 0)
+
                                     set_main_behavior(mouse_area.pickNode,1)  //要发位置
                                     planArrChanged()  // 刷新高度调整框
                             }
@@ -6458,11 +5858,6 @@ Window {
 
                 Item { Layout.fillWidth: true }
 
-                // Label {
-                //     text: "无人机数量: 12"
-                //     color: textColor
-                //     font.pixelSize: 14
-                // }
             }
         }
     }
@@ -6990,14 +6385,9 @@ Window {
 
 
         }
-  //  }
     }
     function send_all_airplane_pos(grp_n,send_f) { // 需要改为只发送同组的  待解决
-      //
 
-       // for (var m = 0; m < main_node_name.length; m++) { 不更新所有组了
-         //   for (var i = 0;i < plan_arr.length; i++) {
-         //   if (plan_arr[i].is_connected === true && main_node_name[m] === plan_arr[i].objectName && plan_arr[i].set_main === true) // 如果这个主机模型已经加载了
         for(var m = 0; m < plan_arr.length; m++) {
             if(plan_arr[m].objectName === main_node_name[grp_n - 1] && plan_arr[m].is_connected !== true){
                 return // 如果主机没有连接，直接返回
@@ -7008,9 +6398,6 @@ Window {
         var baseHeight = Number(input6.text) || 1;
 
         for (var n = 0; n < _sysid_list.length; n++) {
-             //   console.log("++++++++++",_sysid_list[n],main_node_name[grp_n - 1],grp_n,idpos_map[_sysid_list[n]][0],idpos_map[_sysid_list[n]][1])
-             //   if(modelmp[main_node_name[grp_n - 1]] === 0)return
-
                 if (modelmp[_sysid_list[n]].group_id === modelmp[main_node_name[grp_n - 1]].group_id) { // 说明是同一组
                     // 获取该飞机的高度倍数
                     var droneHeightMultiplier = idpos_map[_sysid_list[n]][2] || 1;
@@ -7033,8 +6420,6 @@ Window {
                                               0, send_f)  // Z偏移设为0，使用绝对高度
                 }
             }
-      //  }
-      //  }
     }
 
     function will_crush(node) {
@@ -7381,13 +6766,11 @@ Window {
                                      0,
                                      0,
                                      0)
-        //swarm_send.caculate_pos(node.objectName, 0, 0, 0)
 
         set_main_color(node)
         hasset_map[node.group_id]=1
 
         if(send !== 0) { // 失去继承设置主机的意义了?
-           // send_all_airplane_pos(node.group_id,1) //0 :不延时
             update_all_pos()
         }
         console.log("set_main_behavior ",main_node_name[node.group_id - 1],node.group_id,send)
@@ -7457,92 +6840,9 @@ Window {
         }
         return false
     }
-    // 什么时候用：在独立分组时，如果此分组的所有成员都在本区域，则返回真
-    // 用来干什么
-    function judge_this_area() {
-        for(var i = 0; i < plan_arr.length; i++) {
-            var x_0 = plan_arr[i].is_connected? idpos_map[plan_arr[i].objectName][0]:plan_arr[i].model_x // 是主机
-            var y_0 = plan_arr[i].is_connected? idpos_map[plan_arr[i].objectName][1]:plan_arr[i].model_y
-            if(grp_pos_mp[plan_arr[i].group_id] === 1 && (x_0 >= 9)) {
-
-            }
-        }
-    }
-    function all_move_by_line() {
-        var max_y = 0
-        var min_y = 18
-        var max_x = 0
-        var min_x = 34
-        var index = 0
-        var towards = 0
-        for (var i = 0; i < plan_arr.length; i++) {
-            var x_0 = plan_arr[i].is_connected? idpos_map[plan_arr[i].objectName][0]:plan_arr[i].model_x // 是主机
-            var y_0 = plan_arr[i].is_connected? idpos_map[plan_arr[i].objectName][1]:plan_arr[i].model_y
-
-            if (canv3.visible && y_0 >= 9 && grp_pos_mp[plan_arr[i].group_id] === 1){
-                if(max_y < y_0) {
-                    max_y = y_0
-                    index = i
-                    towards = 1
-                }
-            }
-            if(canv4.visible && y_0 >= 9 && grp_pos_mp[plan_arr[i].group_id] === 2) {
-                if(max_y < y_0) {
-                    max_y = y_0
-                    index = i
-                    towards = 1
-                }
-            }
-            if(canv3.visible && y_0 <= 9 && grp_pos_mp[plan_arr[i].group_id] === 3) {
-                if(min_y > y_0) {
-                    min_y = y_0
-                    index = i
-                    towards = 2
-                }
-            }
-            if(canv4.visible && y_0 <= 9 && grp_pos_mp[plan_arr[i].group_id] === 4){
-                if(min_y > y_0) {
-                    min_y = y_0
-                    index = i
-                    towards = 2
-                }
-            }
-            if ((canv.visible && x_0 >= 18 && grp_pos_mp[plan_arr[i].group_id] === 1) || (canv2.visible && x_0 >= 18 && grp_pos_mp[plan_arr[i].group_id] === 3)){ // 给左
-                if(max_x < x_0) {//...
-                    max_x = x_0
-                    index = i
-                    towards = 3
-                }
-            }
-            if ((canv.visible && x_0 <= 18 && grp_pos_mp[plan_arr[i].group_id] === 2) || (canv2.visible && x_0 <= 18 && grp_pos_mp[plan_arr[i].group_id] === 4)){
-                if(min_x > x_0) { // 给右
-                    min_x = x_0
-                    index = i
-                    towards = 4
-                }
-            }
-
-        }
-
-        for(var j = 0; j < plan_arr.length;j++) {
-            if(plan_arr[j].group_id === plan_arr[index].group_id){
-                x_0 = plan_arr[j].is_connected? idpos_map[plan_arr[j].objectName][0]:plan_arr[j].model_x
-                y_0 = plan_arr[j].is_connected? idpos_map[plan_arr[j].objectName][1]:plan_arr[j].model_y
-                if(towards === 1)
-                    screen_pos_to_world_pos(x_0, y_0 - (max_y - 9) - 1,plan_arr[j])
-                else if (towards === 2)
-                    screen_pos_to_world_pos(x_0, y_0 + min_y,plan_arr[j])
-                else if (towards === 3)
-                    screen_pos_to_world_pos(x_0 - (max_x - 17) - 1, y_0,plan_arr[j])
-                else if (towards === 4)
-                    screen_pos_to_world_pos(x_0 + min_x, y_0,plan_arr[j])// +的有点多
-            }
-        }
-    }
 
     function grp_has_pos(pos) {
         for(var ke in grp_pos_mp){
-         //   console.log("pos",ke,grp_pos_mp[ke])
             if(grp_pos_mp[ke] === pos)
                 return true
         }
@@ -7551,36 +6851,20 @@ Window {
 
     function devide_screen(grp){//仅在独立分组时用
         if(group_num === 2){
-           // if(main_node_name)
             if((grp_has_pos(1) && grp_has_pos(2)) || (grp_has_pos(1) && grp_has_pos(4)) || (grp_has_pos(3) && grp_has_pos(2)) || (grp_has_pos(3) && grp_has_pos(4))) {
                 canv.visible = true
                 canv2.visible = true
                 canv3.visible = false
                 canv4.visible = false
 
-                move_model(2,2)
+                // 保持队形移动到位置2
+                var grpId2 = trans_pos_to_grp(2);
+                if (grpId2 > 0) {
+                    moveGroupKeepFormation(grpId2, 2);
+                }
             }
-         /*   else if ((grp_has_pos(1) && grp_has_pos(3)) || (grp_has_pos(2) && grp_has_pos(4))) {
-                canv.visible = false
-                canv2.visible = false
-                canv3.visible = true
-                canv4.visible = true
-            }*/
-         /*   if(grp === 1)
-                move_model(1,2)*/
-          //  move_model(2,3)
-
         }
 
-      /*  if(group_num === 3){
-
-            canv.visible = true
-            canv4.visible = true
-            canv2.visible = true
-            canv3.visible = true
-
-            move_model(3,3)
-        }*/
         if(group_num === 4 || group_num === 3){
             canv.visible = true
             canv4.visible = true
@@ -7588,26 +6872,17 @@ Window {
             canv3.visible = true
             if(grp_has_pos(1) === false) {
                 grp_pos_mp[grp] = 1
-                move_model(1, group_num)
+                moveGroupKeepFormation(grp, 1)
             } else if (grp_has_pos(2) === false) {
                 grp_pos_mp[grp] = 2
-                move_model(2, group_num)
+                moveGroupKeepFormation(grp, 2)
             } else if (grp_has_pos(3) === false) {
                 grp_pos_mp[grp] = 3
-                move_model(3, group_num)
+                moveGroupKeepFormation(grp, 3)
             } else if (grp_has_pos(4) === false) {
                 grp_pos_mp[grp] = 4
-                move_model(4, group_num)
+                moveGroupKeepFormation(grp, 4)
             }
-         /*   if(grp === 1)
-                move_model(1,2)
-            else if (grp === 2)
-                move_model(2,2)
-            else if (grp === 3)
-                move_model(3,4)
-            else if (grp === 4)
-                move_model(4,4)
-            */
         }
     }
 
@@ -7632,7 +6907,6 @@ Window {
                 break
             }
         }
-      //  console.log("find_max grp  main:max_x max_y",grp,move_grp,max_x,max_y)
         var xx = 0
         var yy = 0
         for(var i = 0; i < plan_arr.length; i++) {
@@ -7647,16 +6921,9 @@ Window {
                     if(max_y < yy) max_y = yy
                     towards = 2
                 }
-/*
-                if (grp_pos_mp[grp] ===  1 && grp_pos_mp[move_grp] === 4) {//左上
-                    if(max_y < yy) max_y = yy
-                    if(max_x < xx) max_x = xx
-                    towards = 5
-                }
-*/
+
                 if(grp_pos_mp[grp] ===  2 && grp_pos_mp[move_grp] === 1) { // 给左
                     if(max_x > xx) max_x = xx
-                   // if(max_y < y) max_y = y
                     towards = 3
                 } else if((grp_pos_mp[grp] ===  2 && grp_pos_mp[move_grp] === 3)||(grp_pos_mp[grp] ===  2 && grp_pos_mp[move_grp] === 4)) { // 给下
                     if(max_y < yy) max_y = yy
@@ -7699,7 +6966,6 @@ Window {
             }
         }
 
-      //  console.log("find mgrp x  y  t",grp,max_x,max_y,merge_limx,merge_limy,towards)
         wait_to_merge_pos(max_x,max_y,merge_limx,merge_limy,towards,grp,move_grp)
     }
     // 在更改分组前移动  或者
@@ -7720,7 +6986,7 @@ Window {
             canv4.visible = false
         }
         if(grp_pos_mp[main_grp] === 2 && 3 === grp_pos_mp[move_grp]) {
-           // canv4.visible = false
+
         }
         var x_0 = 0
         var y_0 = 0
@@ -7731,10 +6997,7 @@ Window {
                 x_0 = plan_arr[i].is_connected ? _sysid_list[plan_arr[i].objectName][0] :plan_arr[i].model_x
                 y_0 = plan_arr[i].is_connected ? _sysid_list[plan_arr[i].objectName][1] :plan_arr[i].model_y
                 if(towards === 1) { // 上方
-                  /*  while(transform_crush(x_0,y_0,mouse_area.pickNode.group_id)) {
-                       // if() 需判断临界时换行
-                        x_0++
-                    }*/
+
                     if ((grp_pos_mp[plan_arr[i].group_id] === 1 && grp_pos_mp[main_grp] === 3) ||
                             (grp_pos_mp[plan_arr[i].group_id] === 2 && grp_pos_mp[main_grp] === 4)) {
                         screen_pos_to_world_pos(x_0, y_0 - (merge_limy - max_y) - 1,plan_arr[i]) //y + offset, offset = max_y - y
@@ -7786,7 +7049,6 @@ Window {
         node.model_y = myInty
     }
     function plan_to_visible() {
-       // console.log("sss",plan_id.length,input_plan.text)
         for (var i = 0; i < plan_id.length; i++) {
             plan_id[i].visible = false
             plan_id[i].pickable = false
@@ -7797,7 +7059,6 @@ Window {
             plan_id[i].visible = true
             plan_id[i].pickable = true
             plan_arr.push(plan_id[i])
-           // console.log(plan_id[i].objectName,plan_id[i].visible,plan_id[i].pickable)
         }
 
         // 将模型居中排列
@@ -7839,7 +7100,7 @@ Window {
         planArrChanged();
     }
 
-    // 窗口大小变化时重新居中已筹划的飞机
+    // 窗口大小变化时重新居中已筹划的飞机（保持原有队形）
     function repositionPlanedAircraft() {
         if (plan_arr.length === 0) {
             return;  // 没有筹划的飞机，不需要处理
@@ -7847,45 +7108,134 @@ Window {
 
         console.log("repositionPlanedAircraft: group_num=", group_num);
 
-        // 如果只有一个组，所有飞机居中显示
+        // 如果只有一个组，保持队形移动到中心
         if (group_num === 1) {
-            var modelCount = plan_arr.length;
-            var areaWidth = Math.floor(control.width / 40) - 1;
-            var areaHeight = Math.floor(control.height / 40) - 1;
-
-            var cols = Math.min(modelCount, areaWidth);
-            var rows = Math.ceil(modelCount / cols);
-
-            var startX = Math.floor((areaWidth - cols) / 2);
-            var startY = Math.floor((areaHeight - rows) / 2);
-
-            console.log("单组居中: 模型数=", modelCount, "起始位置=", startX, startY);
-
-            var xx = startX;
-            var yy = startY;
-            var lim = startX + cols;
-
-            for (var j = 0; j < plan_arr.length; j++) {
-                if (xx < lim) {
-                    screen_pos_to_world_pos(xx, yy, plan_arr[j]);
-                    xx++;
-                } else {
-                    yy++;
-                    xx = startX;
-                    screen_pos_to_world_pos(xx, yy, plan_arr[j]);
-                    xx++;
-                }
-            }
+            moveGroupKeepFormation(1, 1);
         } else {
-            // 多个组时，每个组在各自区域居中
-            // 遍历 grp_pos_mp 中实际存在的位置映射
+            // 多个组时，每个组保持队形移动到各自区域中心
             for (var grpKey in grp_pos_mp) {
                 var grpId = Number(grpKey);
                 var pos = grp_pos_mp[grpKey];
                 if (grpId > 0 && pos > 0) {
-                    move_model(pos, group_num);
+                    moveGroupKeepFormation(grpId, pos);
                 }
             }
+        }
+    }
+
+    // 保持队形移动组到指定区域中心
+    // groupId: 组ID, pos: 区域位置(1-4)
+    function moveGroupKeepFormation(groupId, pos) {
+        // 收集该组的所有模型
+        var groupModels = [];
+        for (var i = 0; i < plan_arr.length; i++) {
+            if (plan_arr[i].group_id === groupId) {
+                groupModels.push(plan_arr[i]);
+            }
+        }
+
+        if (groupModels.length === 0) {
+            return;
+        }
+
+        // 计算当前组的边界框
+        var minX = Infinity, maxX = -Infinity;
+        var minY = Infinity, maxY = -Infinity;
+        for (var j = 0; j < groupModels.length; j++) {
+            var mx = groupModels[j].model_x;
+            var my = groupModels[j].model_y;
+            if (mx < minX) minX = mx;
+            if (mx > maxX) maxX = mx;
+            if (my < minY) minY = my;
+            if (my > maxY) maxY = my;
+        }
+
+        // 计算当前队形的宽度和高度
+        var formationWidth = maxX - minX + 1;
+        var formationHeight = maxY - minY + 1;
+
+        // 计算当前队形的中心
+        var currentCenterX = (minX + maxX) / 2;
+        var currentCenterY = (minY + maxY) / 2;
+
+        // 计算目标区域的边界
+        var areaLeft = 0, areaRight = 0, areaTop = 0, areaBottom = 0;
+
+        if (group_num === 1) {
+            areaLeft = 0;
+            areaRight = Math.floor(control.width / 40) - 1;
+            areaTop = 0;
+            areaBottom = Math.floor(control.height / 40) - 1;
+        } else if (group_num === 2) {
+            if (pos === 1) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            } else if (pos === 2) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            }
+        } else if (group_num === 3) {
+            if (pos === 1) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 2) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 3) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            }
+        } else if (group_num === 4) {
+            if (pos === 1) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 2) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 3) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            } else if (pos === 4) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            }
+        }
+
+        // 计算目标区域的中心
+        var targetCenterX = (areaLeft + areaRight) / 2;
+        var targetCenterY = (areaTop + areaBottom) / 2;
+
+        // 计算偏移量
+        var offsetX = Math.round(targetCenterX - currentCenterX);
+        var offsetY = Math.round(targetCenterY - currentCenterY);
+
+        console.log("moveGroupKeepFormation: groupId=", groupId, "pos=", pos);
+        console.log("当前中心:", currentCenterX, currentCenterY, "目标中心:", targetCenterX, targetCenterY);
+        console.log("偏移量:", offsetX, offsetY);
+
+        // 移动所有模型（保持相对位置）
+        for (var k = 0; k < groupModels.length; k++) {
+            var newX = groupModels[k].model_x + offsetX;
+            var newY = groupModels[k].model_y + offsetY;
+            screen_pos_to_world_pos(newX, newY, groupModels[k]);
         }
     }
 
@@ -7900,20 +7250,6 @@ Window {
         }
     }
     function mymove(xx,yy,thisnode){
-        // 检查View3D尺寸是否有效
-     /*   if (control.width <= 0 || control.height <= 0) {
-            console.log("警告：View3D尺寸无效，延迟进行坐标转换");
-            // 设置一个定时器，稍后再尝试
-            Qt.callLater(function() {
-                if (control.width > 0 && control.height > 0) {
-                    // View3D已经初始化，重新执行坐标转换
-                    performMove(xx, yy, thisnode);
-                } else {
-                    console.log("View3D仍然未正确初始化");
-                }
-            });
-            return;
-        }*/
 
         performMove(xx, yy, thisnode);
     }
@@ -7925,34 +7261,13 @@ Window {
         if (plan_id.indexOf(thisnode) === -1) {
             plan_id.push(thisnode)
         }
-/*
-        var map_from_1 = control.mapFrom3DScene(node.scenePosition) // 屏幕坐标
-
-        if (((map_from_1.x -20) % 40 <= 1 || (map_from_1.x -20) % 40 >= 39) && ((map_from_1.y-20) % 40 <= 1 || (map_from_1.y-20) % 40 >= 39)) {
-            return
-        }
-        var nu_x = (map_from_1.x-20) % 40 > 20 ? map_from_1.x + 40 - (map_from_1.x-20) % 40 : map_from_1.x - (map_from_1.x-20) % 40;
-        var nu_y = (map_from_1.y-20) % 40 > 20 ? map_from_1.y + 40 - (map_from_1.y-20) % 40 : map_from_1.y - (map_from_1.y-20) % 40;
-
-        var pos_temp_1 = Qt.vector3d(nu_x,nu_y, map_from_1.z);
-        var map_to_1 = control.mapTo3DScene(pos_temp_1) // 世界坐标
-        node.x = map_to_1.x
-        node.y = map_to_1.y
-*/
         xx = xx * 40 + 20  // 像素中心
         yy = yy * 40 + 20
 
-        // 1. 打印View3D的尺寸（确认屏幕坐标范围）
-      //  console.log("View3D尺寸：宽=", control.width, "高=", control.height);
-        // 2. 打印目标屏幕坐标（判断是否超出View3D范围）
-      //  console.log("目标屏幕坐标：xx=", xx, "yy=", yy);
-
         var map_from_1 = control.mapFrom3DScene(thisnode.scenePosition) // 屏幕坐标
-      //  console.log("初始屏幕坐标：x=", map_from_1.x, "y=", map_from_1.y, "z=", map_from_1.z);
 
         // 确保屏幕坐标有效
         if (isNaN(map_from_1.x) || isNaN(map_from_1.y)) {
-           // console.log("警告：无效的屏幕坐标，跳过移动");
             return;
         }
 
@@ -7966,7 +7281,6 @@ Window {
         while((Math.abs(xx - map_from_1.x) > 1 || Math.abs(yy - map_from_1.y) > 1) && iterations < maxIterations) {
             x_off = xx - map_from_1.x
             y_off = yy - map_from_1.y
-            //    console.log(x_off,y_off,map_from_1.x,map_from_1.y)
             pos_temp = Qt.vector3d((map_from_1.x + x_off), (map_from_1.y + y_off), map_from_1.z);
             map_to = control.mapTo3DScene(pos_temp) // 世界坐标
 
@@ -7980,78 +7294,20 @@ Window {
             iterations++;
         }
 
-        if (iterations >= maxIterations) {
-           // console.log("警告：达到最大迭代次数，可能未完成精确移动");
-        }
-
         // 只有在坐标有效时才更新model_x和model_y
         if (!isNaN(map_from_1.x) && !isNaN(map_from_1.y)) {
             myIntx = (map_from_1.x - 20) % 40 > 25 ? (map_from_1.x - 20) / 40 + 1 : (map_from_1.x - 20) / 40
             myInty = (map_from_1.y - 20) % 40 > 25 ? (map_from_1.y - 20) / 40 + 1 : (map_from_1.y - 20) / 40
             thisnode.model_x = myIntx
             thisnode.model_y = myInty
-           // console.log(thisnode.model_x,thisnode.model_y,thisnode.visible,map_from_1.x,map_from_1.y)
-          //  console.log("最终3D坐标：x=", thisnode.x, "y=", thisnode.y, "z=", thisnode.z);
-          //  console.log("相机位置：", control.camera.position, "近裁剪面：", control.camera.near, "远裁剪面：", control.camera.far);
         }
-        // 这些操作已经在performMove函数中完成
-        // 如果performMove函数没有被调用（例如View3D尺寸无效），则不执行这些操作
-    /*
-        var map_from = control.mapFrom3DScene(node.scenePosition) // 屏幕坐标
 
-        var pos_temp = Qt.vector3d((map_from.x + n), map_from.y, map_from.z);
-        var map_to = control.mapTo3DScene(pos_temp) // 世界坐标
-        sphere_node.x = map_to.x
-        console.log("index ",mygrid.indexAt(2,70))*/
-
-
-      //  numberDelegate.itemAt(530,30).Text="1"
-     //   console.log(n,map_from.x,sphere_node.x,node.scenePosition.x,"+++++++++++++++++++++++++++++++++")
     }
-   /* function show_position(node){
-        var map_from_1 = control.mapFrom3DScene(node.scenePosition) // 屏幕坐标
-
-        myIntx = (map_from_1.x - 20) % 40 > 25 ? (map_from_1.x - 20) / 40 + 1 : (map_from_1.x - 20) / 40
-        myInty = (map_from_1.y - 20) % 40 > 25 ? (map_from_1.y - 20) / 40 + 1 : (map_from_1.y - 20) / 40
-
-        node.model_x = myIntx
-        node.model_y = myInty
-    }
-    function screen_pos_to_world_pos(xx,yy,thisnode){ // 间距
-        thisnode.visible = true
-        xx = xx * 40 + 20  // 像素中心
-        yy = yy * 40 + 20
-        var map_from_1 = control.mapFrom3DScene(thisnode.scenePosition) // 屏幕坐标
-
-        var x_off = 0
-        var y_off = 0
-        var pos_temp = 0
-        var map_to = 0
-        while(Math.abs(xx - map_from_1.x) > 1 || Math.abs(yy - map_from_1.y) > 1) {
-            x_off = xx - map_from_1.x
-            y_off = yy - map_from_1.y
-        //    console.log(x_off,y_off,map_from_1.x,map_from_1.y)
-            pos_temp = Qt.vector3d((map_from_1.x + x_off), (map_from_1.y + y_off), map_from_1.z);
-            map_to = control.mapTo3DScene(pos_temp) // 世界坐标
-            thisnode.x = map_to.x
-            thisnode.y = map_to.y
-            map_from_1 = control.mapFrom3DScene(thisnode.scenePosition) // 屏幕坐标
-        }
-        myIntx = (map_from_1.x - 20) % 40 > 25 ? (map_from_1.x - 20) / 40 + 1 : (map_from_1.x - 20) / 40
-        myInty = (map_from_1.y - 20) % 40 > 25 ? (map_from_1.y - 20) / 40 + 1 : (map_from_1.y - 20) / 40
-        thisnode.model_x = myIntx
-        thisnode.model_y = myInty
-        if (thisnode.is_connected) {
-            idpos_map[Number(thisnode.objectName)][0] = myIntx
-            idpos_map[Number(thisnode.objectName)][1] = myInty
-        }
-    }*/
 
     function transform_crush(a,b,grp_id) {
         for (var i = 0; i < _sysid_list.length; i++) {
             if (idpos_map[_sysid_list[i]][0] === a &&
                     idpos_map[_sysid_list[i]][1] === b) {
-               // console.log("crash",_sysid_list[n],node.objectName,idpos_map[node.objectName])
                 return true // 检测到有
             }
         }
@@ -8060,6 +7316,96 @@ Window {
         }
         return false
     }
+
+    // 计算队形变换时的区域中心起始位置
+    // 返回 {x: 起始X, y: 起始Y, areaWidth: 区域宽度, areaHeight: 区域高度}
+    function getFormationAreaCenter(groupId, formationWidth, formationHeight) {
+        var areaLeft = 0, areaRight = 0, areaTop = 0, areaBottom = 0;
+        
+        // 获取该组对应的位置
+        var pos = grp_pos_mp[groupId] || 0;
+        
+        // 如果只有一个组或者找不到位置映射，使用整个区域
+        if (group_num === 1 || pos === 0) {
+            areaLeft = 0;
+            areaRight = Math.floor(control.width / 40) - 1;
+            areaTop = 0;
+            areaBottom = Math.floor(control.height / 40) - 1;
+        } else if (group_num === 2) {
+            // 分成2组：左右分布
+            if (pos === 1) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            } else if (pos === 2) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            }
+        } else if (group_num === 3) {
+            // 分成3组：上左、上右、下左
+            if (pos === 1) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 2) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 3) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            }
+        } else if (group_num === 4) {
+            // 分成4组：四个象限
+            if (pos === 1) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 2) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = 0;
+                areaBottom = Math.floor(control.height / 2 / 40) - 1;
+            } else if (pos === 3) {
+                areaLeft = 0;
+                areaRight = Math.floor(control.width / 2 / 40) - 1;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            } else if (pos === 4) {
+                areaLeft = Math.floor(control.width / 2 / 40) + 1;
+                areaRight = Math.floor(control.width / 40) - 2;
+                areaTop = Math.floor(control.height / 2 / 40) + 1;
+                areaBottom = Math.floor(control.height / 40) - 1;
+            }
+        }
+        
+        var areaWidth = areaRight - areaLeft + 1;
+        var areaHeight = areaBottom - areaTop + 1;
+        
+        // 计算居中的起始位置
+        var startX = areaLeft + Math.floor((areaWidth - formationWidth) / 2);
+        var startY = areaTop + Math.floor((areaHeight - formationHeight) / 2);
+        
+        // 确保起始位置不小于区域左上角
+        if (startX < areaLeft) startX = areaLeft;
+        if (startY < areaTop) startY = areaTop;
+        
+        console.log("getFormationAreaCenter: groupId=", groupId, "pos=", pos, "group_num=", group_num);
+        console.log("区域: left=", areaLeft, "right=", areaRight, "top=", areaTop, "bottom=", areaBottom);
+        console.log("队形尺寸: width=", formationWidth, "height=", formationHeight);
+        console.log("居中起始位置: startX=", startX, "startY=", startY);
+        
+        return {x: startX, y: startY, areaWidth: areaWidth, areaHeight: areaHeight};
+    }
+
     // 三角形
     function triangle_swarm()
     {
@@ -8069,63 +7415,45 @@ Window {
                 form_arr.push(plan_arr[i])
             }
         }
-    /*    if (form_arr.length !== 3) {
-            console.log("本组飞机数量 airplane count :",form_arr.length)
-            return
-        }*/
-        var x_0 = 0
-        var y_0 = 2
-        if (Number(input4.text) === 1) { // 横坐标起始点（基准线）
-            x_0 = 4
-        } else if(Number(input4.text) === 2) {
-            x_0 = 20
-        } else if(Number(input4.text) === 3) {
-            x_0 = 4
-            y_0 = 10
-        } else if(Number(input4.text) === 4) {
-            x_0 = 20
-            y_0 = 10
-        }
-
-     /*   while (transform_crush(x_0,y_0,form_arr[0].group_id) || transform_crush(x_0 - 2,y_0 + 3,form_arr[1].group_id) ||
-               transform_crush(x_0 + 2,y_0 + 3,form_arr[2].group_id)) {
-            x_0 += 1
-            y_0 += 1
-        }*/
 
         var n = form_arr.length;
         var rows = 0;
+        var tempN = n;
 
         // 计算行数
-        while (n > 0) {
-            rows++; // rows 有bug，11 12 13 14 15时不准确，
-            n= n-(rows*2-1)
+        while (tempN > 0) {
+            rows++;
+            tempN = tempN - (rows * 2 - 1);
         }
 
-        n = form_arr.length;
+        // 计算队形的宽度和高度
+        var formationWidth = 2 * rows - 1;  // 最宽的一行
+        var formationHeight = rows;
+
+        // 获取居中的起始位置
+        var areaInfo = getFormationAreaCenter(Number(input4.text), formationWidth, formationHeight);
+        var x_0 = areaInfo.x;  // 区域左边界
+        var y_0 = areaInfo.y;
+
         var index = 0;
         var line = 0
         for (i = 1; i <= rows; ++i) {
-            var x1 = x_0
-            for (var j = 0; j < rows - i; ++j) {
-                x1++
-            }
+            // 计算当前行的起始x位置（三角形每行居中）
+            var x1 = x_0 + (rows - i);  // 从左边界开始，加上偏移使其居中
 
             line++
-            for (j = 0; j < 2 * i - 1; ++j) {
+            for (var j = 0; j < 2 * i - 1; ++j) {
                 if (index < n) {
                     if(line !== rows) {
                         screen_pos_to_world_pos(x1 + j, y_0, form_arr[index++])
-                      //  console.log("l,r",line,rows)
                     } else {// 对最后一行的特殊处理
                         var last_line_num = form_arr.length - index
                         screen_pos_to_world_pos(x1 + j, y_0, form_arr[index++])
 
-                      //  console.log("最后一排的数量,两顶点位置",last_line_num,x1,x1 + 2*(i-1)) // 1、找两定点，2、计算定点间的距离，3、按数量平分
                         if (last_line_num !== 1) {// x1是第一顶点，x1 + 2*i-1
                                 var ste = 2 * (i - 1) / (last_line_num - 1)
                                 var step =  Math.floor(ste) // 取最大整数
-                             //   console.log(ste,step)
+
                                 for(var k = 1; k < last_line_num;k++) {
                                     if(index !== form_arr.length - 1)
                                         screen_pos_to_world_pos(x1 + k * step, y_0, form_arr[index++])
@@ -8138,15 +7466,9 @@ Window {
                 }
             }
 
-            // 换行
             y_0++
         }
 
-
-        /*
-        screen_pos_to_world_pos(x_0, y_0, form_arr[0]) // 里面会设置可见
-        screen_pos_to_world_pos(x_0 - 2, y_0 + 3,form_arr[1])
-        screen_pos_to_world_pos(x_0 + 2, y_0 + 3,form_arr[2])*/
         send_all_airplane_pos(input4.text,0)
 
     }
@@ -8164,79 +7486,65 @@ Window {
             console.log("本组飞机数量 airplane count :",form_arr.length)
             return
         }
-        var x_0 = 0
-        var y_0 = 2
-        if (Number(input4.text) === 1) { // 横坐标起始点（基准线）
-            x_0 = 2
-        } else if(Number(input4.text) === 2) {
-            x_0 = 20
-        } else if(Number(input4.text) === 3) {
-            x_0 = 2
-            y_0 = 10
-        } else if(Number(input4.text) === 4) {
-            x_0 = 20
-            y_0 = 10
-        }
 
         var n = form_arr.length;
 
-            // 计算正方形的边长
-            var side = Math.ceil(Math.sqrt(n));
-            if (side < 2) side = 2; // 最小边长为2
-            var index = 0;
+        // 计算正方形的边长
+        var side = Math.ceil(Math.sqrt(n));
+        if (side < 2) side = 2; // 最小边长为2
 
-            // 填充四个顶点
+        // 获取居中的起始位置
+        var areaInfo = getFormationAreaCenter(Number(input4.text), side, side);
+        var x_0 = areaInfo.x;
+        var y_0 = areaInfo.y;
 
-            index += 4;
+        var index = 0;
 
-            screen_pos_to_world_pos(x_0,y_0,form_arr[0])
-            screen_pos_to_world_pos(x_0,y_0 + side - 1,form_arr[1])
-            screen_pos_to_world_pos(x_0 + side - 1,y_0,form_arr[2])
-            screen_pos_to_world_pos(x_0 + side - 1,y_0 + side - 1,form_arr[3])
+        // 填充四个顶点
+        index += 4;
 
-            // 填充边
-            // 上边（从左到右）
-            for ( i = 1; i < side - 1; ++i) {
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0 + i,y_0,form_arr[index])
-                index++;
-            }
-
-            // 右边（从上到下）
-            for ( i = 1; i < side - 1; ++i) {
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0 + side - 1,y_0 + i,form_arr[index])
-                index++;
-            }
-
-            // 下边（从右到左）
-              for (i = side - 2; i >= 1; --i) {
-                  if (index >= n) break;
-                  screen_pos_to_world_pos(x_0 + i,y_0 + side - 1,form_arr[index])
-                  index++;
-              }
-
-            // 左边（从下到上）
-            for (i = side - 2; i >= 1; --i) {
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0,y_0 + i,form_arr[index])
-                index++;
-            }
-
-            // 填充内部
-            for (i = 1; i < side - 1; ++i) {
-                for (var j = 1; j < side - 1; ++j) {
-                    if (index >= n) break;
-                    screen_pos_to_world_pos(x_0+j,y_0 + i,form_arr[index])
-                    index++;
-                }
-            }
-
-        /*
         screen_pos_to_world_pos(x_0,y_0,form_arr[0])
-        screen_pos_to_world_pos(x_0,y_0 + 3,form_arr[1])
-        screen_pos_to_world_pos(x_0 + 3,y_0,form_arr[2])
-        screen_pos_to_world_pos(x_0 + 3,y_0 + 3,form_arr[3])*/
+        screen_pos_to_world_pos(x_0,y_0 + side - 1,form_arr[1])
+        screen_pos_to_world_pos(x_0 + side - 1,y_0,form_arr[2])
+        screen_pos_to_world_pos(x_0 + side - 1,y_0 + side - 1,form_arr[3])
+
+        // 填充边
+        // 上边（从左到右）
+        for (var i = 1; i < side - 1; ++i) {
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + i,y_0,form_arr[index])
+            index++;
+        }
+
+        // 右边（从上到下）
+        for (i = 1; i < side - 1; ++i) {
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + side - 1,y_0 + i,form_arr[index])
+            index++;
+        }
+
+        // 下边（从右到左）
+        for (i = side - 2; i >= 1; --i) {
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + i,y_0 + side - 1,form_arr[index])
+            index++;
+        }
+
+        // 左边（从下到上）
+        for (i = side - 2; i >= 1; --i) {
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0,y_0 + i,form_arr[index])
+            index++;
+        }
+
+        // 填充内部
+        for (i = 1; i < side - 1; ++i) {
+            for (var j = 1; j < side - 1; ++j) {
+                if (index >= n) break;
+                screen_pos_to_world_pos(x_0+j,y_0 + i,form_arr[index])
+                index++;
+            }
+        }
 
         send_all_airplane_pos(input4.text,0)
     }
@@ -8252,204 +7560,60 @@ Window {
             console.log("本组飞机数量 airplane count :",form_arr.length)
             return
         }
-        var x_0 = 0
-        var y_0 = 1
-        if (Number(input4.text) === 1) { // 横坐标起始点（基准线）
-            x_0 = 3
-        } else if(Number(input4.text) === 2) {
-            x_0 = 20
-        } else if(Number(input4.text) === 3) {
-            x_0 = 3
-            y_0 = 10
-        } else if(Number(input4.text) === 4) {
-            x_0 = 20
-            y_0 = 10
+
+        var n = form_arr.length
+        // 计算菱形的高度
+        var height = 2 // 最小高度为2（4个顶点）
+        while (4 + 4 * (height - 2) < n) {
+            height++
         }
-/*
-        if (_sysid_list.length != 4) {
-            console.log("airplane count :",_sysid_list.length)
-            return
-        }*/
-/*
-        while (transform_crush(x_0,y_0,form_arr[0].group_id) || transform_crush(x_0 - 1,y_0 + 2,form_arr[1].group_id) ||
-               transform_crush(x_0 + 1,y_0 + 2,form_arr[2].group_id) || transform_crush(x_0,y_0 + 4,form_arr[3].group_id)) {
-            x_0 += 1
-            y_0 += 1
+
+        var size = 2 * height - 1 // 菱形的总行数
+
+        // 获取居中的起始位置
+        var areaInfo = getFormationAreaCenter(Number(input4.text), size, size);
+        var x_0 = areaInfo.x;
+        var y_0 = areaInfo.y;
+
+        var index = 0;
+
+        // 填充四个顶点
+        index += 4
+        screen_pos_to_world_pos(x_0 + height - 1,y_0 ,form_arr[0])
+        screen_pos_to_world_pos(x_0,y_0 + height - 1,form_arr[1])
+        screen_pos_to_world_pos(x_0 + size - 1,y_0 + height - 1,form_arr[2])
+        screen_pos_to_world_pos(x_0 + height - 1,y_0 + size - 1,form_arr[3])
+
+        // 填充边
+        // 上部分（从上到下）
+        for (i = 1; i < height - 1; ++i) {
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + height - 1 - i,y_0 + i,form_arr[index])  // 左上边
+            index++;
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + height - 1 + i,y_0 + i,form_arr[index]) // 右上边
+            index++;
         }
-*/
 
-            var n = form_arr.length
-            // 计算菱形的高度
-            var height = 2 // 最小高度为2（4个顶点）
-            while (4 + 4 * (height - 2) < n) {
-                height++
-            }
-         //   height = 1
-         //   while((2 * height - 1) * (2 * height - 1) / 2 < n) {
-         //       height++
-         //   }
-            var size = 2 * height - 1 // 菱形的总行数
-          //  height++
-
-       // var size = 3
-      //  while(size* size / 2 <= n) {
-      //                  size++
-      //              }
-      //  size = Math.floor(Math.ceil(Math.sqrt(2*n)))
-     //   if (size < 2) size = 2; // 最小边长为2
-     //   height = Math.floor((size + 1) / 2)
-     //   size = height * 2 - 1
-
-           // var size = Math.floor(Math.floor(Math.sqrt(2*n)))//根号2倍的side
-          //  size = size % 2 === 0 ? size + 1: size // size 变为奇数
-          //  height = ((size+1)/2)
-
-
-      //  var side = (Math.sqrt(n)) * Math.sqrt(2) / 2
-      //  height = Math.floor(side) + 1
-      //  size = 2 * height - 1
-            var index = 0;
-
-            // 填充四个顶点
-
-            //console.log(size, height, x_0,y_0)
-            index += 4
-            screen_pos_to_world_pos(x_0 + height - 1,y_0 ,form_arr[0])
-            screen_pos_to_world_pos(x_0,y_0 + height - 1,form_arr[1])
-            screen_pos_to_world_pos(x_0 + size - 1,y_0 + height - 1,form_arr[2])
-            screen_pos_to_world_pos(x_0 + height - 1,y_0 + size - 1,form_arr[3])
-
-            // 填充边
-            // 上部分（从上到下）
-            for ( i = 1; i < height - 1; ++i) {
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0 + height - 1 - i,y_0 + i,form_arr[index])  // 左上边
-                index++;
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0 + height - 1 + i,y_0 + i,form_arr[index]) // 右上边
+        // 下部分（从上到下）
+        for (i = 1; i < height - 1; ++i) {
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + height - 1 - i,y_0 + size - 1 - i,form_arr[index]) // 左下边
+            index++;
+            if (index >= n) break;
+            screen_pos_to_world_pos(x_0 + height - 1 + i,y_0 + size - 1 - i,form_arr[index]) // 右下边
+            index++;
+        }
+        // 填充内部
+        for (i = 1; i < size - 1; ++i) {
+            for (var j = 1; j < size - 1; ++j) {
+                if (index >= n) {
+                    break;
+                }
+                screen_pos_to_world_pos(x_0 + j,y_0 + i,form_arr[index])
                 index++;
             }
-
-            // 下部分（从上到下）
-            for ( i = 1; i < height - 1; ++i) {
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0 + height - 1 - i,y_0 + size - 1 - i,form_arr[index]) // 左下边
-                index++;
-                if (index >= n) break;
-                screen_pos_to_world_pos(x_0 + height - 1 + i,y_0 + size - 1 - i,form_arr[index]) // 右下边
-                index++;
-            }
-            //console.log("neibu",index,n)
-            // 填充内部   实际走不到填充的部分
-            for ( i = 1; i < size - 1; ++i) {
-                for (var j = 1; j < size - 1; ++j) {
-                    if (index >= n) {
-                        break;
-                    }
-                   // if(i < height){
-                    //    if(j > height - 1 - i && j < height - 1 + i) {
-                    //        console.log(index,i,j)
-                     //       screen_pos_to_world_pos(x_0 + j,y_0 + i,form_arr[index])
-                     //       index++;
-                    //    }
-                   // }
-                    screen_pos_to_world_pos(x_0 + j,y_0 + i,form_arr[index])
-                    index++;
-                }
-            }
-
-
-
-     /*   var index = 0;
-
-        var a, b, c;//行数，输出次数，空格数
-        var size = 1;
-        while(size* size / 2 <= n) {
-                        size++
-                    }
-            if (n % 2 == 1)//n为奇数才能输出完整的菱形，
-            {
-                for (a = 1; a <= size; a++)//上半部分输出行数
-                {
-                    c = 1;//空格数
-                    // for (b = 0; b < a + (n / 2); b++)//前半部分每行输出次数n/2+1~n次
-                    // {
-                    //     if (c <= (n / 2 + 1) - a)//判断是否输出空格，否则输出*
-                    //     {
-                    //      //   printf(" ");
-                    //         c++;
-                    //     }
-                    //     else
-                    //     {
-                    //         if (index >= n) break;
-                    //         screen_pos_to_world_pos(x_0 + b,y_0 + a,form_arr[index++])
-                    //       //  printf("*");
-                    //     }
-                    // }
-                    for (b = 0; b < a * 2 - 1; b++)//前半部分每行输出次数n/2+1~n次
-                    {
-                        {
-                            if (index >= n) break;
-                            screen_pos_to_world_pos(x_0 + b,y_0 + a,form_arr[index++])
-                        }
-                    }
-                }
-                for (a = 1; a <= (n / 2); a++)//后半部分输出行数
-                {
-                    c = 1;
-                    for (b = 1; b <= n - a; b++)//后半部分每行输出次数
-                    {
-                        {
-                            if (index >= n) break;
-                            screen_pos_to_world_pos(x_0 + b,y_0 + a + Math.floor(n / 2 + 1),form_arr[index++])
-                        }
-                    }
-                }
-            }
-            else//输入的n为偶数，菱形不是完整的，按照n-1行输出
-            {
-                for (a = 1; a <= (n / 2); a++)//前半部分输出行数的循环
-                {
-                    c = 1;
-                    for (b = 1; b <= a + (n / 2 - 1); b++)//每行输出次数循环
-                    {
-                        if (c <= (n / 2) - a)
-                        {
-                            c++;
-                        }
-                        else
-                        {
-                            if (index >= n) break;
-                            screen_pos_to_world_pos(x_0 + b,y_0 + a,form_arr[index++])
-                        }
-                    }
-                }
-                for (a = 1; a <= (n / 2 - 1); a++)//后半部分输出行数循环
-                {
-                    c = 1;
-                    for (b = 1; b <= (n - 1) - a; b++)//没行输出次数的循环
-                    {
-                        if (c <= a)
-                        {
-                            c++;
-                        }
-                        else
-                        {
-                            if (index >= n) break;
-                            screen_pos_to_world_pos(x_0 + b,y_0 + a + Math.floor(n / 2),form_arr[index++])
-
-                        }
-                    }
-                }
-
-
-            }
-            */
-/*
-        screen_pos_to_world_pos(x_0,y_0,form_arr[0])
-        screen_pos_to_world_pos(x_0 - 1,y_0 + 2,form_arr[1])
-        screen_pos_to_world_pos(x_0 + 1,y_0 + 2,form_arr[2])
-        screen_pos_to_world_pos(x_0 ,y_0 + 4,form_arr[3])*/
+        }
 
         send_all_airplane_pos(input4.text,0)
     }
@@ -8461,106 +7625,32 @@ Window {
                 form_arr.push(plan_arr[i])
             }
         }
-/*        if (form_arr.length === 3) {
-            console.log("本组飞机数量 airplane count :",form_arr.length)
-            triangle_swarm()
-            return
+
+        var n = form_arr.length;
+
+        var radius = n / 2; // 半径不能太小
+        if(radius < 2) radius = 2
+        if(radius >= 8) radius = 8
+
+        // 圆形的直径（队形尺寸）
+        var diameter = Math.ceil(radius * 2) + 1;
+
+        // 获取居中的起始位置
+        var areaInfo = getFormationAreaCenter(Number(input4.text), diameter, diameter);
+        var x_1 = areaInfo.x;
+        var y_1 = areaInfo.y;
+
+        var angleStep = 2 * Math.PI / n; // 每个点之间的角度差
+        var index = 0
+
+        for (i = 0; i < n; ++i) {
+            var angle = i * angleStep;
+            var x = radius + radius * Math.cos(angle);
+            var y = radius + radius * Math.sin(angle);
+            if(index >= n) break
+            screen_pos_to_world_pos(x_1 + x,y_1 + y,form_arr[index++])
         }
 
-        if (form_arr.length === 4) {
-            console.log("本组飞机数量 airplane count :",form_arr.length)
-            rectangle_swarm()
-            return
-        }
-
-        if (form_arr.length != 8) {
-            console.log("airplane count :",form_arr.length)
-            return
-        }
-*/
-        var x_1 = 2
-        var y_1 = 1
-        if ( Number(input4.text) === 1) {
-            x_1 = 2
-            y_1 = 1
-        }
-        if ( Number(input4.text) === 2) {
-            x_1 = 19
-        }
-        if ( Number(input4.text) === 3) {
-            x_1 = 2
-            y_1 = 10
-        }
-        if ( Number(input4.text) === 4) {
-            x_1 = 19
-            y_1 = 10
-        }
-
-
-            var n = form_arr.length;
-          /*  if (n < 4) {
-                return;
-            }*/
-
-        /*    // 计算圆的半径
-            var radius = n / (2 * Math.PI); // 假设每个占据一个单位弧长
-            var diameter = Math.floor(2 * radius) + 1;
-          //  var diameter = 2 * radius;
-
-            // 中心点坐标
-            var centerX = diameter / 2;
-            var centerY = diameter / 2;
-
-            // 均匀分布在圆的周长上
-            var index = 0;
-            for (var angle = 0; angle < 2 * Math.PI; angle += 2 * Math.PI / n) {
-                var x = Math.ceil(centerX + radius * Math.cos(angle));
-                var y = Math.ceil(centerY + radius * Math.sin(angle))
-               // y = Math.floor(centerY + radius * Math.sin(angle)) < centerY + radius * Math.sin(angle) ?
-                  //          Math.ceil(centerY + radius * Math.sin(angle)) - 1 : Math.floor(centerY + radius * Math.sin(angle));
-
-                if (x <= diameter && y <= diameter) {
-                    if(index >= n) break
-                    console.log("rx ry:",x_1,y_1," r ",centerX)
-                    console.log(form_arr[index].objectName,x,y,angle,radius * Math.cos(angle),radius * Math.sin(angle))
-                    screen_pos_to_world_pos(x_1 + x,y_1 + y,form_arr[index++])
-                }
-            }*/
-
-
-            var radius = n / 2; // 半径不能太小
-            if(radius < 2) radius = 2
-            if(radius >= 8) radius = 8
-            var angleStep = 2 * Math.PI / n; // 每个点之间的角度差
-            var index = 0
-
-            for (i = 0; i < n; ++i) {
-                var angle = i * angleStep;
-                var x = radius + radius * Math.cos(angle);
-                var y = radius + radius * Math.sin(angle);
-                if(index >= n) break
-              /*  if(x - Math.floor(x) > 0.5)
-                    x = Math.ceil(x)
-                else
-                    x = Math.floor(x)
-                if(y - Math.floor(y) > 0.5)
-                    y = Math.ceil(y)
-                else
-                    y = Math.floor(y)*/
-                screen_pos_to_world_pos(x_1 + x,y_1 + y,form_arr[index++])
-            }
-
-
-/*
-        screen_pos_to_world_pos(x_1,y_1,        form_arr[0])
-        screen_pos_to_world_pos(x_1 + 2,y_1,    form_arr[1])
-        screen_pos_to_world_pos(x_1 - 1,y_1 + 1,form_arr[2])
-        screen_pos_to_world_pos(x_1 + 3,y_1 + 1,form_arr[3])
-        screen_pos_to_world_pos(x_1,    y_1 + 4,form_arr[4])
-        screen_pos_to_world_pos(x_1 + 2,y_1 + 4,form_arr[5])
-        screen_pos_to_world_pos(x_1 - 1,y_1 + 3,form_arr[6])
-        screen_pos_to_world_pos(x_1 + 3,y_1 + 3,form_arr[7])
-*/
         send_all_airplane_pos(input4.text,0)
     }
 
@@ -8573,35 +7663,16 @@ Window {
                 form_arr.push(plan_arr[i])
             }
         }
-       /* if (form_arr.length !== 4) {
-            console.log("本组飞机数量 airplane count :",form_arr.length)
-            return
-        }*/
-        var x_0 = 0
-        var y_0 = 1
-        if (Number(input4.text) === 1) { // 横坐标起始点（基准线）
-            x_0 = 1
-        } else if(Number(input4.text) === 2) {
-            x_0 = 18
-            y_0 = 1
-        } else if(Number(input4.text) === 3) {
-            x_0 = 1
-            y_0 = 10
-        } else if(Number(input4.text) === 4) {
-            x_0 = 18
-            y_0 = 10
-        }
 
+        var n = form_arr.length;
+        // 东西一字形：宽度为n，高度为1
+        var areaInfo = getFormationAreaCenter(Number(input4.text), n, 1);
+        var x_0 = areaInfo.x;
+        var y_0 = areaInfo.y;
 
-        var dis = 0
         for(var i1 = 0; i1 < form_arr.length; i1++) {
-            while (transform_crush(x_0 + dis,y_0,form_arr[i1].group_id)) {
-                x_0 += 2
-            }
-            screen_pos_to_world_pos(x_0 + dis, y_0, form_arr[i1])
-            dis += 1
+            screen_pos_to_world_pos(x_0 + i1, y_0, form_arr[i1])
         }
-// 口述：飞行中点东西一字型   有一个没在队形里面，且主机的颜色显示变化了，且飞机的序号2号把4号覆盖了，两个2号了
         send_all_airplane_pos(input4.text,0)
     }
 
@@ -8612,32 +7683,15 @@ Window {
                 form_arr.push(plan_arr[i])
             }
         }
-       /* if (form_arr.length !== 4) {
-            console.log("本组飞机数量 airplane count :",form_arr.length)
-            return
-        }*/
-        var x_0 = 0
-        var y_0 = 2
-        if (Number(input4.text) === 1) { // 横坐标起始点（基准线）
-            x_0 = 1
-        } else if(Number(input4.text) === 2) {
-            x_0 = 18
-        } else if(Number(input4.text) === 3) {
-            x_0 = 1
-            y_0 = 10
-        } else if(Number(input4.text) === 4) {
-            x_0 = 18
-            y_0 = 10
-        }
 
+        var n = form_arr.length;
+        // 南北一字形：宽度为1，高度为n
+        var areaInfo = getFormationAreaCenter(Number(input4.text), 1, n);
+        var x_0 = areaInfo.x;
+        var y_0 = areaInfo.y;
 
-        var dis = 0
         for(var i2 = 0; i2 < form_arr.length; i2++) {
-            while (transform_crush(x_0,y_0 + dis,form_arr[i2].group_id)) {
-                y_0 += 1
-            }
-            screen_pos_to_world_pos(x_0, y_0 + dis, form_arr[i2])
-                dis += 2
+            screen_pos_to_world_pos(x_0, y_0 + i2, form_arr[i2])
         }
 
         send_all_airplane_pos(input4.text,0)
