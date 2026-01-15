@@ -124,6 +124,14 @@ Window {
         group4Count = c4;
     }
 
+    // 清除所有模型的主机状态
+    function clearAllMainStatus() {
+        for (var i = 0; i < plan_arr.length; i++) {
+            plan_arr[i].set_main = 0;
+            plan_arr[i].is_main = false;
+        }
+    }
+
     // 交互消息列表模型
     ListModel {
         id: messageListModel
@@ -675,6 +683,16 @@ Window {
                 // 标记是否已完成初始化
                 property bool _initialized: false
 
+                // 定时器：用于合并窗口大小变化时的重新定位调用
+                Timer {
+                    id: repositionTimer
+                    interval: 50  // 50毫秒延迟，合并多次调用
+                    repeat: false
+                    onTriggered: {
+                        repositionPlanedAircraft();
+                    }
+                }
+
                 onWidthChanged: {
                             if (width > 0) {
                                 console.log("View3D宽度更新：", width);
@@ -785,11 +803,21 @@ Window {
 
                                     _initialized = true;
                                 } else {
-                                    // 窗口大小变化时，重新居中已筹划的飞机
-                                    repositionPlanedAircraft();
+                                    // 窗口大小变化时，使用定时器合并多次调用
+                                    repositionTimer.restart();
                                 }
                             }
                         }
+
+                // 添加高度变化处理，解决最大化/还原时模型位置问题
+                onHeightChanged: {
+                    if (height > 0 && _initialized) {
+                        console.log("View3D高度更新：", height);
+                        // 窗口大小变化时，使用定时器合并多次调用
+                        repositionTimer.restart();
+                    }
+                }
+
                 GridView{
                    id:mygrid
                    anchors.fill: parent
@@ -4925,6 +4953,9 @@ Window {
                                     if (Number(input3.text) > Number(input_plan.text)) {
                                         popup.open()
                                     } else { // 执行分组
+                                        // 先清除所有主机状态
+                                        clearAllMainStatus();
+                                        
                                         if (input3.text === "1") {   //
                                             canv.visible = false
                                             canv2.visible = false
@@ -4977,6 +5008,7 @@ Window {
                                                 }
                                             }
 
+                                            grp_pos_mp = {}  // 清理所有旧的位置映射
                                             grp_pos_mp[1] = 1
                                             group_num = 1
                                             updateGroupCounts()
@@ -5480,44 +5512,35 @@ Window {
                                     // 更新组数为实际组数+1（新增的组）
                                     var newGroupNum = actualGroupCount + 1;
 
-                                    // 收集当前所有被占用的屏幕位置
-                                    var usedPositions = {};
-                                    for(var grpKey in grp_pos_mp) {
-                                        var grpId = Number(grpKey);
-                                        // 检查这个组是否真的有模型
-                                        var grpHasModels = false;
-                                        for(var chk = 0; chk < plan_arr.length; chk++) {
-                                            if(plan_arr[chk].group_id === grpId) {
-                                                grpHasModels = true;
-                                                break;
-                                            }
+                                    // 重新分配所有组的位置
+                                    // 收集所有组（包括新组）
+                                    var allGroupIds = [];
+                                    for(var eg = 0; eg < plan_arr.length; eg++) {
+                                        var egid = plan_arr[eg].group_id;
+                                        if(allGroupIds.indexOf(egid) === -1) {
+                                            allGroupIds.push(egid);
                                         }
-                                        if(grpHasModels && grp_pos_mp[grpKey] > 0) {
-                                            usedPositions[grp_pos_mp[grpKey]] = grpId;
-                                            console.log("位置", grp_pos_mp[grpKey], "被组", grpId, "占用");
-                                        }
+                                    }
+                                    // 添加新组
+                                    if(allGroupIds.indexOf(targetGroupId) === -1) {
+                                        allGroupIds.push(targetGroupId);
+                                    }
+                                    // 排序组号
+                                    allGroupIds.sort(function(a, b) { return a - b; });
+
+                                    // 清空旧的位置映射，重新分配
+                                    grp_pos_mp = {};
+                                    
+                                    // 根据组数分配位置
+                                    // 2组：位置1和2（左右）
+                                    // 3组：位置1、2、3（左上、右上、左下）
+                                    // 4组：位置1、2、3、4（四个象限）
+                                    for(var gi = 0; gi < allGroupIds.length && gi < 4; gi++) {
+                                        grp_pos_mp[allGroupIds[gi]] = gi + 1;
+                                        console.log("为组", allGroupIds[gi], "分配位置", gi + 1);
                                     }
 
-                                    // 为新组分配一个空闲的屏幕位置
-                                    // 位置1=左上, 2=右上, 3=左下, 4=右下
-                                    // 优先分配与组号相同的位置（如第4组优先放位置4）
-                                    var newPos = 0;
-                                    if(!usedPositions[targetGroupId] && targetGroupId >= 1 && targetGroupId <= 4) {
-                                        // 优先使用与组号相同的位置
-                                        newPos = targetGroupId;
-                                        grp_pos_mp[targetGroupId] = newPos;
-                                        console.log("为组", targetGroupId, "分配对应位置", newPos);
-                                    } else {
-                                        // 否则找一个空闲的位置
-                                        for(var pos = 1; pos <= 4; pos++) {
-                                            if(!usedPositions[pos]) {
-                                                newPos = pos;
-                                                grp_pos_mp[targetGroupId] = pos;
-                                                console.log("为组", targetGroupId, "分配空闲位置", pos);
-                                                break;
-                                            }
-                                        }
-                                    }
+                                    var newPos = grp_pos_mp[targetGroupId];
 
                                     // 设置分屏线可见性
                                     if(newGroupNum >= 3) {
@@ -5543,6 +5566,15 @@ Window {
                                     // 将新组的模型移动到分配的屏幕位置，并检测碰撞
                                     if(newPos > 0) {
                                         moveGroupToPositionWithCollision(targetGroupId, newPos);
+                                    }
+
+                                    // 重新调整所有组的模型位置到各自区域居中
+                                    for(var grpIdx in grp_pos_mp) {
+                                        var gid = Number(grpIdx);
+                                        var gpos = grp_pos_mp[grpIdx];
+                                        if(gpos > 0) {
+                                            move_model(gpos, newGroupNum);
+                                        }
                                     }
 
                                     if(select_merge[0].is_connected === true) {
