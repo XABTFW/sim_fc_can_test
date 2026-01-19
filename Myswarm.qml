@@ -157,6 +157,37 @@ Window {
     Mavlinktest2 { id: test_mavlink }
     Swarmsend { id: swarm_send }
 
+    // 接收主机航线高度信号
+    Connections {
+        target: swarm_send
+        function onMainAltitudeChanged(vehicleId, altitude) {
+            console.log("收到主机航线高度信号: 飞机ID", vehicleId, "高度", altitude, "米");
+            // 根据vehicleId找到对应的组
+            var groupId = getGroupIdByVehicleId(vehicleId);
+            if (groupId > 0) {
+                console.log("飞机", vehicleId, "属于第", groupId, "组");
+                setMainHeight(groupId, altitude);
+                addMessage("收到飞机" + vehicleId + "航线高度: " + altitude.toFixed(1) + "米", "info");
+            } else {
+                console.log("未找到飞机", vehicleId, "对应的组");
+            }
+        }
+    }
+
+    // 根据vehicleId获取组ID
+    function getGroupIdByVehicleId(vehicleId) {
+        for (var i = 0; i < plan_arr.length; i++) {
+            if (plan_arr[i].objectName == vehicleId.toString() || 
+                parseInt(plan_arr[i].objectName) === vehicleId) {
+                // 检查是否是主机
+                if (plan_arr[i].is_main || plan_arr[i].set_main === 1) {
+                    return plan_arr[i].group_id;
+                }
+            }
+        }
+        return -1;
+    }
+
     // 集群操作确认弹窗
     SwarmOperationPopup {
         id: swarmOpPopup
@@ -193,7 +224,7 @@ Window {
         background: Rectangle {
             color: "#3b4252"
             radius: 12
-            border.color: primaryColor
+            border.color: root.primaryColor
             border.width: 2
         }
         contentItem: ColumnLayout {
@@ -5462,6 +5493,179 @@ Window {
             height: 150
             color: "transparent"
 
+            // 设置绝对高度弹窗
+            Popup {
+                id: setHeightDialog
+                modal: true
+                anchors.centerIn: Overlay.overlay
+                width: 380
+                height: 200
+                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                
+                property int targetGroupId: 1
+                
+                background: Rectangle {
+                    color: "#2e3440"
+                    border.color: primaryColor
+                    border.width: 2
+                    radius: 12
+                }
+                
+                contentItem: Column {
+                    anchors.fill: parent
+                    spacing: 0
+                    
+                    // 标题栏
+                    Rectangle {
+                        width: parent.width
+                        height: 45
+                        color: "#3b4252"
+                        radius: 12
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            height: 12
+                            color: parent.color
+                        }
+                        Text {
+                            anchors.centerIn: parent
+                            text: "⚙️ 设置绝对高度 (米)"
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: primaryColor
+                        }
+                    }
+                    
+                    // 内容区域
+                    Item {
+                        width: parent.width
+                        height: parent.height - 45 - 55
+                        
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 15
+                            
+                            Text {
+                                text: "已选择 " + heightSelectedDrones.length + " 架飞机"
+                                font.pixelSize: 14
+                                color: "#88c0d0"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            
+                            Row {
+                                spacing: 15
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                
+                                Text {
+                                    text: "绝对高度:"
+                                    font.pixelSize: 14
+                                    color: "#d8dee9"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                
+                                TextField {
+                                    id: heightInput
+                                    width: 100
+                                    height: 32
+                                    text: "10"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    font.pixelSize: 14
+                                    validator: DoubleValidator { bottom: -100; top: 500; decimals: 1 }
+                                    color: "#eceff4"
+                                    background: Rectangle {
+                                        color: "#3b4252"
+                                        border.color: heightInput.activeFocus ? primaryColor : "#4c566a"
+                                        border.width: heightInput.activeFocus ? 2 : 1
+                                        radius: 6
+                                    }
+                                }
+                                
+                                Text {
+                                    text: "米"
+                                    font.pixelSize: 14
+                                    color: "#d8dee9"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 按钮区域
+                    Item {
+                        width: parent.width
+                        height: 55
+                        
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 20
+                            
+                            Button {
+                                width: 90
+                                height: 34
+                                text: "确定"
+                                background: Rectangle {
+                                    color: parent.pressed ? Qt.darker(secondaryColor, 1.2) : 
+                                           parent.hovered ? Qt.lighter(secondaryColor, 1.1) : secondaryColor
+                                    radius: 6
+                                }
+                                contentItem: Text {
+                                    text: parent.text
+                                    font.pixelSize: 14
+                                    color: "#2e3440"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                onClicked: {
+                                    var newHeight = parseFloat(heightInput.text);
+                                    if (!isNaN(newHeight)) {
+                                        var mainH = groupMainHeight[setHeightDialog.targetGroupId.toString()] || 0;
+                                        var count = heightSelectedDrones.length;
+                                        for (var i = 0; i < heightSelectedDrones.length; i++) {
+                                            var drone = heightSelectedDrones[i];
+                                            setDroneAbsoluteHeight(drone.objectName, newHeight, setHeightDialog.targetGroupId);
+                                            var relH = newHeight - mainH;
+                                            drone.model_z = relH;
+                                            if (drone.is_connected) {
+                                                swarm_send.set_absolute_altitude(drone.objectName, newHeight);
+                                            }
+                                        }
+                                        updateGroupScale(setHeightDialog.targetGroupId);
+                                        var newManualSet = JSON.parse(JSON.stringify(groupHeightManuallySet));
+                                        newManualSet[setHeightDialog.targetGroupId.toString()] = true;
+                                        groupHeightManuallySet = newManualSet;
+                                        addMessage("已设置 " + count + " 架飞机高度为 " + newHeight + " 米", "success");
+                                        heightSelectedDrones = [];
+                                    }
+                                    setHeightDialog.close();
+                                }
+                            }
+                            
+                            Button {
+                                width: 90
+                                height: 34
+                                text: "取消"
+                                background: Rectangle {
+                                    color: parent.pressed ? Qt.darker("#4c566a", 1.2) : 
+                                           parent.hovered ? Qt.lighter("#4c566a", 1.1) : "#4c566a"
+                                    radius: 6
+                                }
+                                contentItem: Text {
+                                    text: parent.text
+                                    font.pixelSize: 14
+                                    color: "#d8dee9"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                onClicked: {
+                                    heightSelectedDrones = [];
+                                    setHeightDialog.close();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // 左侧：飞机高度调整框 (占4/5)
             Rectangle {
                 id: droneStatusBar
@@ -5470,68 +5674,19 @@ Window {
                     top: parent.top
                     bottom: parent.bottom
                 }
-                width: parent.width * 4 / 5 - 6  // 4/5宽度，减去间距
+                width: parent.width * 4 / 5 - 6
                 color: root.panelColor
                 radius: 8
                 border.color: "#4c566a"
                 border.width: 1
                 clip: true
 
-                // 高度刻度（左侧）
-                Column {
-                    id: heightScale
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 5
-                    width: 30
-                    spacing: 0
-
-                    Text {
-                        text: "高度"
-                        font.pixelSize: 10
-                        font.bold: true
-                        color: "#88c0d0"
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    Repeater {
-                        model: 5
-                        delegate: Item {
-                            width: 30
-                            height: (droneStatusBar.height - 30) / 5
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: (5 - index) + "x"  // 从上到下: 5x, 4x, 3x, 2x, 1x
-                                font.pixelSize: 9
-                                color: "#a0a0a0"
-                            }
-
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                height: 1
-                                color: "#4c566a"
-                                visible: index < 4
-                            }
-                        }
-                    }
-                }
-
                 // 可滚动的飞机区域
                 Flickable {
                     id: droneStatusFlickable
-                    anchors.left: heightScale.right
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
+                    anchors.fill: parent
                     anchors.margins: 5
-                    anchors.leftMargin: 2
                     contentWidth: droneHeightContent.width
-                    contentHeight: parent.height - 10
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
 
@@ -5543,7 +5698,7 @@ Window {
                     Row {
                         id: droneHeightContent
                         spacing: 0
-                        height: parent.height
+                        height: droneStatusFlickable.height > 0 ? droneStatusFlickable.height : 130
 
                         // 动态生成各组
                         Repeater {
@@ -5554,6 +5709,11 @@ Window {
                                 id: groupHeightItem
                                 property int groupId: index + 1
                                 property var groupDrones: []
+                                property int droneCount: 0
+                                property real scaleMax: groupScaleMax[groupId.toString()] || 5
+                                property real scaleMin: groupScaleMin[groupId.toString()] || -5
+                                property real scaleRange: Math.max(scaleMax - scaleMin, 1)
+                                property real mainHeight: groupMainHeight[groupId.toString()] || 0
 
                                 function updateGroupDrones() {
                                     var newDrones = [];
@@ -5566,18 +5726,15 @@ Window {
                                     droneCount = newDrones.length;
                                 }
 
-                                property int droneCount: 0
-
                                 visible: droneCount > 0
-
-                                width: droneCount * 36 + 25 + (index > 0 ? 3 : 0)
-                                height: parent.height
+                                width: visible ? (30 + droneCount * 40 + 10 + (index > 0 ? 3 : 0)) : 0
+                                height: droneHeightContent.height > 0 ? droneHeightContent.height : 130
 
                                 Row {
                                     anchors.fill: parent
                                     spacing: 0
 
-                                    // 组分隔线（粗线）
+                                    // 组分隔线
                                     Rectangle {
                                         visible: index > 0 && groupHeightItem.visible
                                         width: 3
@@ -5589,104 +5746,247 @@ Window {
                                         width: parent.width - (index > 0 ? 3 : 0)
                                         height: parent.height
 
-                                        // 组标题
-                                        Rectangle {
+                                        // 组标题和设置高度按钮
+                                        Row {
                                             width: parent.width
-                                            height: 18
-                                            color: "transparent"
+                                            height: 22
+                                            spacing: 5
 
                                             Text {
-                                                anchors.left: parent.left
-                                                anchors.leftMargin: 3
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: "第" + groupId + "组"
                                                 font.pixelSize: 10
                                                 font.bold: true
                                                 color: groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4))
                                             }
+
+                                            Rectangle {
+                                                width: 50
+                                                height: 16
+                                                radius: 3
+                                                color: heightSelectedDrones.length > 0 ? "#5e81ac" : "#4c566a"
+                                                anchors.verticalCenter: parent.verticalCenter
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "设置高度"
+                                                    font.pixelSize: 8
+                                                    color: "white"
+                                                }
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    onClicked: {
+                                                        var selected = [];
+                                                        for (var i = 0; i < heightSelectedDrones.length; i++) {
+                                                            if (heightSelectedDrones[i].group_id === groupId) {
+                                                                selected.push(heightSelectedDrones[i]);
+                                                            }
+                                                        }
+                                                        if (selected.length > 0) {
+                                                            heightSelectedDrones = selected;
+                                                            setHeightDialog.targetGroupId = groupId;
+                                                            setHeightDialog.open();
+                                                        } else {
+                                                            console.log("请先右键选择本组的飞机");
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "主机:" + mainHeight.toFixed(1) + "m"
+                                                font.pixelSize: 8
+                                                color: "#a0a0a0"
+                                            }
                                         }
 
-                                        // 飞机列区域
+                                        // 刻度尺和飞机区域
                                         Row {
                                             width: parent.width
-                                            height: parent.height - 18
+                                            height: parent.height - 22
                                             spacing: 0
 
-                                            Repeater {
-                                                model: groupHeightItem.groupDrones.length
+                                            // 刻度尺
+                                            Rectangle {
+                                                id: scaleArea
+                                                width: 30
+                                                height: parent.height
+                                                color: "transparent"
 
-                                                delegate: Item {
-                                                    property var droneNode: groupHeightItem.groupDrones[index] || null
-                                                    property int droneHeight: droneNode ? (droneNode.model_z || 1) : 1  // 默认高度为1x
-                                                    width: 36
-                                                    height: parent.height
+                                                Repeater {
+                                                    model: Math.ceil(scaleRange) + 1
+                                                    delegate: Item {
+                                                        property real scaleValue: scaleMax - index
+                                                        property real yPos: (index / scaleRange) * (scaleArea.height - 10)
+                                                        // 计算刻度间隔，太密集时只显示部分刻度
+                                                        property int scaleStep: scaleRange > 20 ? 5 : (scaleRange > 10 ? 2 : 1)
+                                                        property bool showLabel: (Math.abs(scaleValue) % scaleStep === 0) || scaleValue === 0
+                                                        
+                                                        x: 0
+                                                        y: yPos + 5
+                                                        width: 30
+                                                        height: 1
 
-                                                    Row {
-                                                        anchors.fill: parent
-                                                        spacing: 0
-
-                                                        // 飞机列（5个格子）
                                                         Rectangle {
-                                                            width: 35
-                                                            height: parent.height
+                                                            anchors.right: parent.right
+                                                            width: showLabel ? 8 : 4
+                                                            height: 1
+                                                            color: scaleValue === 0 ? "#bf616a" : "#4c566a"
+                                                        }
+
+                                                        Text {
+                                                            visible: showLabel
+                                                            anchors.right: parent.right
+                                                            anchors.rightMargin: 10
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                            text: scaleValue.toFixed(0)
+                                                            font.pixelSize: 8
+                                                            color: scaleValue === 0 ? "#bf616a" : "#a0a0a0"
+                                                        }
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    x: 0
+                                                    y: ((scaleMax - 0) / scaleRange) * (parent.height - 10) + 5
+                                                    width: parent.width
+                                                    height: 1
+                                                    color: "#bf616a"
+                                                    opacity: 0.5
+                                                }
+                                            }
+
+                                            // 飞机列区域
+                                            Row {
+                                                width: parent.width - 30
+                                                height: parent.height
+                                                spacing: 2
+
+                                                Repeater {
+                                                    model: groupHeightItem.groupDrones.length
+
+                                                    delegate: Item {
+                                                        id: droneColumn
+                                                        property var droneNode: groupHeightItem.groupDrones[index] || null
+                                                        property real droneAbsHeight: droneNode ? getDroneAbsoluteHeight(droneNode.objectName, groupId) : mainHeight
+                                                        property real droneRelHeight: droneAbsHeight - mainHeight
+                                                        property bool isSelected: heightSelectedDrones.indexOf(droneNode) >= 0
+                                                        property bool isDragging: false
+                                                        
+                                                        width: 38
+                                                        height: parent.height
+
+                                                        Rectangle {
+                                                            anchors.fill: parent
                                                             color: "transparent"
+                                                            border.color: "#3b4252"
+                                                            border.width: 1
 
-                                                            // 5个高度格子
-                                                            Column {
-                                                                anchors.fill: parent
-                                                                spacing: 0
+                                                            Rectangle {
+                                                                x: 0
+                                                                y: ((scaleMax - 0) / scaleRange) * (parent.height - 10) + 5
+                                                                width: parent.width
+                                                                height: 1
+                                                                color: "#bf616a"
+                                                                opacity: 0.3
+                                                            }
 
-                                                                Repeater {
-                                                                    model: 5
-                                                                    delegate: Rectangle {
-                                                                        property int heightLevel: 5 - index  // 从上到下: 5, 4, 3, 2, 1
-                                                                        width: 35
-                                                                        height: (parent.height) / 5
-                                                                        color: droneHeight === heightLevel ?
-                                                                            (droneNode ?
-                                                                                (droneNode.is_main || droneNode.set_main ? "#bf616a" :  // 主机显示红色
-                                                                                    (droneNode.is_connected ?
-                                                                                        (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))
-                                                                                        : "#646566"))
-                                                                                : "#646566")
-                                                                            : "transparent"
-                                                                        border.color: "#4c566a"
-                                                                        border.width: 1
+                                                            Rectangle {
+                                                                id: droneIcon
+                                                                width: 34
+                                                                height: 20
+                                                                radius: 3
+                                                                x: 2
+                                                                y: Math.max(0, Math.min(parent.height - height - 5, ((scaleMax - droneRelHeight) / scaleRange) * (parent.height - 10) + 5 - height/2))
+                                                                
+                                                                color: isSelected ? Qt.darker(droneNode && (droneNode.is_main || droneNode.set_main) ? "#bf616a" : 
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4))), 1.3) :
+                                                                    (droneNode && (droneNode.is_main || droneNode.set_main) ? "#bf616a" : 
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4))))
+                                                                
+                                                                border.color: isSelected ? "white" : "transparent"
+                                                                border.width: isSelected ? 2 : 0
 
-                                                                        // 飞机标识（只在当前高度显示）
-                                                                        Text {
-                                                                            anchors.centerIn: parent
-                                                                            text: droneNode && droneHeight === heightLevel ? droneNode.objectName : ""
-                                                                            font.pixelSize: 9
-                                                                            font.bold: true
-                                                                            color: "white"
-                                                                        }
+                                                                Text {
+                                                                    anchors.centerIn: parent
+                                                                    text: droneNode ? droneNode.objectName : ""
+                                                                    font.pixelSize: 8
+                                                                    font.bold: true
+                                                                    color: "white"
+                                                                }
 
-                                                                        MouseArea {
-                                                                            anchors.fill: parent
-                                                                            onClicked: {
-                                                                                if (droneNode) {
-                                                                                    droneNode.model_z = heightLevel;
-                                                                                    // 更新 idpos_map 中的高度值
-                                                                                    if (droneNode.is_connected && idpos_map[droneNode.objectName]) {
-                                                                                        idpos_map[droneNode.objectName][2] = heightLevel;
-                                                                                        // 发送新的高度到飞机
-                                                                                        send_all_airplane_pos(droneNode.group_id, 0);
+                                                                Text {
+                                                                    anchors.top: parent.bottom
+                                                                    anchors.topMargin: 1
+                                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                                    text: droneAbsHeight.toFixed(1) + "m"
+                                                                    font.pixelSize: 7
+                                                                    color: "#a0a0a0"
+                                                                }
+
+                                                                MouseArea {
+                                                                    id: dragArea
+                                                                    anchors.fill: parent
+                                                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                                                    drag.target: parent
+                                                                    drag.axis: Drag.YAxis
+                                                                    drag.minimumY: 0
+                                                                    drag.maximumY: droneColumn.height - parent.height - 5
+
+                                                                    onPressed: function(mouse) {
+                                                                        if (mouse.button === Qt.RightButton) {
+                                                                            if (droneNode) {
+                                                                                var idx = heightSelectedDrones.indexOf(droneNode);
+                                                                                var newSelected = heightSelectedDrones.slice();
+                                                                                if (idx >= 0) {
+                                                                                    newSelected.splice(idx, 1);
+                                                                                } else {
+                                                                                    if (newSelected.length === 0 || newSelected[0].group_id === droneNode.group_id) {
+                                                                                        newSelected.push(droneNode);
                                                                                     }
-                                                                                    console.log("设置飞机", droneNode.objectName, "高度为", heightLevel, "x");
                                                                                 }
+                                                                                heightSelectedDrones = newSelected;
                                                                             }
+                                                                        } else {
+                                                                            isDragging = true;
+                                                                        }
+                                                                    }
+
+                                                                    onReleased: {
+                                                                        if (isDragging && droneNode) {
+                                                                            var newY = droneIcon.y;
+                                                                            var newRelH = scaleMax - ((newY + droneIcon.height/2 - 5) / (droneColumn.height - 10)) * scaleRange;
+                                                                            newRelH = Math.round(newRelH * 10) / 10;
+                                                                            
+                                                                            // 计算新的绝对高度
+                                                                            var newAbsH = mainHeight + newRelH;
+                                                                            
+                                                                            // 存储绝对高度
+                                                                            setDroneAbsoluteHeight(droneNode.objectName, newAbsH, groupId);
+                                                                            droneNode.model_z = newRelH;
+                                                                            
+                                                                            // 发送绝对高度给飞机
+                                                                            if (droneNode.is_connected) {
+                                                                                swarm_send.set_absolute_altitude(droneNode.objectName, newAbsH);
+                                                                            }
+                                                                            
+                                                                            console.log("拖动设置飞机", droneNode.objectName, "绝对高度为", newAbsH, "米, 相对高度", newRelH, "米");
+                                                                            updateGroupScale(groupId);
+                                                                        }
+                                                                        isDragging = false;
+                                                                    }
+
+                                                                    onPositionChanged: {
+                                                                        if (isDragging && droneNode) {
+                                                                            var newY = droneIcon.y;
+                                                                            var newRelH = scaleMax - ((newY + droneIcon.height/2 - 5) / (droneColumn.height - 10)) * scaleRange;
+                                                                            droneNode.model_z = Math.round(newRelH * 10) / 10;
                                                                         }
                                                                     }
                                                                 }
                                                             }
-                                                        }
-
-                                                        // 飞机间分隔线（细线）
-                                                        Rectangle {
-                                                            width: 1
-                                                            height: parent.height
-                                                            color: "#3b4252"
                                                         }
                                                     }
                                                 }
@@ -5704,6 +6004,22 @@ Window {
                                     function onGroup3CountChanged() { if (groupId === 3) groupHeightItem.updateGroupDrones(); }
                                     function onGroup4CountChanged() { if (groupId === 4) groupHeightItem.updateGroupDrones(); }
                                     function onPlanArrChanged() { groupHeightItem.updateGroupDrones(); }
+                                    function onGroupMainHeightChanged() { 
+                                        groupHeightItem.mainHeight = groupMainHeight[groupId.toString()] || 0;
+                                        groupHeightItem.updateGroupDrones();
+                                    }
+                                    function onGroupScaleMaxChanged() {
+                                        groupHeightItem.scaleMax = groupScaleMax[groupId.toString()] || 5;
+                                        groupHeightItem.scaleRange = Math.max(groupHeightItem.scaleMax - groupHeightItem.scaleMin, 1);
+                                    }
+                                    function onGroupScaleMinChanged() {
+                                        groupHeightItem.scaleMin = groupScaleMin[groupId.toString()] || -5;
+                                        groupHeightItem.scaleRange = Math.max(groupHeightItem.scaleMax - groupHeightItem.scaleMin, 1);
+                                    }
+                                    function onDroneAbsoluteHeightChanged() {
+                                        // 绝对高度变化时更新显示
+                                        groupHeightItem.updateGroupDrones();
+                                    }
                                 }
                             }
                         }
@@ -5736,7 +6052,7 @@ Window {
                     top: parent.top
                     bottom: parent.bottom
                 }
-                width: parent.width * 1 / 5 - 6  // 1/5宽度，减去间距
+                width: parent.width * 1 / 5 - 6
                 color: root.panelColor
                 radius: 8
                 border.color: "#4c566a"
@@ -6247,6 +6563,91 @@ Window {
     property var arr_to_change_pos: []
     property var grp_pos_mp: {0:0} // 组别对应的屏幕位置
 
+    // 高度显示相关属性
+    property var groupMainHeight: {"1": 0, "2": 0, "3": 0, "4": 0}  // 每组主机的绝对高度(米)
+    property var groupScaleMax: {"1": 5, "2": 5, "3": 5, "4": 5}    // 每组刻度尺最大值(米)
+    property var groupScaleMin: {"1": -5, "2": -5, "3": -5, "4": -5} // 每组刻度尺最小值(米)
+    property var heightSelectedDrones: []  // 高度区域多选的飞机列表
+    property var droneAbsoluteHeight: ({})  // 存储每个飞机的绝对高度 {objectName: height}
+    property var groupHeightManuallySet: {"1": false, "2": false, "3": false, "4": false}  // 标记每组是否手动设置过高度
+
+    // 获取飞机的绝对高度
+    function getDroneAbsoluteHeight(objectName, groupId) {
+        if (droneAbsoluteHeight[objectName] !== undefined) {
+            return droneAbsoluteHeight[objectName];
+        }
+        // 默认返回主机高度
+        return groupMainHeight[groupId.toString()] || 0;
+    }
+
+    // 设置飞机的绝对高度
+    function setDroneAbsoluteHeight(objectName, height, groupId) {
+        var newHeights = JSON.parse(JSON.stringify(droneAbsoluteHeight));
+        newHeights[objectName] = height;
+        droneAbsoluteHeight = newHeights;
+        
+        // 标记该组已手动设置过高度
+        var newManual = JSON.parse(JSON.stringify(groupHeightManuallySet));
+        newManual[groupId.toString()] = true;
+        groupHeightManuallySet = newManual;
+    }
+
+    // 计算飞机相对于主机的高度
+    function getDroneRelativeHeight(objectName, groupId) {
+        var absH = getDroneAbsoluteHeight(objectName, groupId);
+        var mainH = groupMainHeight[groupId.toString()] || 0;
+        return absH - mainH;
+    }
+
+    // 更新组的刻度范围
+    function updateGroupScale(groupId) {
+        var maxH = 5;
+        var minH = -5;
+        var mainH = groupMainHeight[groupId.toString()] || 0;
+        
+        for (var i = 0; i < plan_arr.length; i++) {
+            if (plan_arr[i].group_id === groupId && plan_arr[i].visible) {
+                var absH = getDroneAbsoluteHeight(plan_arr[i].objectName, groupId);
+                var relH = absH - mainH;
+                if (relH > maxH) maxH = Math.ceil(relH) + 1;
+                if (relH < minH) minH = Math.floor(relH) - 1;
+            }
+        }
+        
+        var newMax = JSON.parse(JSON.stringify(groupScaleMax));
+        var newMin = JSON.parse(JSON.stringify(groupScaleMin));
+        newMax[groupId.toString()] = maxH;
+        newMin[groupId.toString()] = minH;
+        groupScaleMax = newMax;
+        groupScaleMin = newMin;
+    }
+
+    // 设置主机高度（从航线获取）
+    function setMainHeight(groupId, height) {
+        var newMainH = JSON.parse(JSON.stringify(groupMainHeight));
+        newMainH[groupId.toString()] = height;
+        groupMainHeight = newMainH;
+        
+        // 如果该组没有手动设置过高度，则给所有从机设置相同的绝对高度
+        if (!groupHeightManuallySet[groupId.toString()]) {
+            for (var i = 0; i < plan_arr.length; i++) {
+                if (plan_arr[i].group_id === groupId && plan_arr[i].visible) {
+                    var newHeights = JSON.parse(JSON.stringify(droneAbsoluteHeight));
+                    newHeights[plan_arr[i].objectName] = height;
+                    droneAbsoluteHeight = newHeights;
+                    
+                    // 发送绝对高度给飞机
+                    if (plan_arr[i].is_connected) {
+                        swarm_send.set_absolute_altitude(plan_arr[i].objectName, height);
+                    }
+                }
+            }
+        }
+        
+        updateGroupScale(groupId);
+        console.log("设置第" + groupId + "组主机高度为: " + height + "米");
+    }
+
     // 当前选中模型相对于主机的坐标
     property int relativeEast: 0   // 东(正) 西(负)
     property int relativeNorth: 0  // 北(正) 南(负)
@@ -6394,18 +6795,13 @@ Window {
             }
         }
 
-        // 获取设定高度（基础单位）
-        var baseHeight = Number(input6.text) || 1;
-
         for (var n = 0; n < _sysid_list.length; n++) {
                 if (modelmp[_sysid_list[n]].group_id === modelmp[main_node_name[grp_n - 1]].group_id) { // 说明是同一组
-                    // 获取该飞机的高度倍数
-                    var droneHeightMultiplier = idpos_map[_sysid_list[n]][2] || 1;
-                    // 计算绝对高度 = 倍数 × 设定高度
-                    var absoluteHeight = droneHeightMultiplier * baseHeight;
+                    // 获取该飞机的绝对高度
+                    var absHeight = getDroneAbsoluteHeight(_sysid_list[n], grp_n);
 
                     // 发送绝对高度给每个飞机（包括主机）
-                    swarm_send.set_absolute_altitude(_sysid_list[n], absoluteHeight);
+                    swarm_send.set_absolute_altitude(_sysid_list[n], absHeight);
 
                     if ( if_main_node(modelmp[_sysid_list[n]].objectName) ) {
                         // 主机：XY偏移为0

@@ -1,9 +1,22 @@
 #include "swarm_send.h"
 #include "MultiVehicleManager.h"
 #include "QGCApplication.h"
+
+// 静态实例初始化
+Swarm_send* Swarm_send::_instance = nullptr;
+
+Swarm_send* Swarm_send::instance() {
+    return _instance;
+}
+
 Swarm_send::Swarm_send(QObject *parent)
     : QObject{parent}
-{}
+{
+    // 设置静态实例
+    if (_instance == nullptr) {
+        _instance = this;
+    }
+}
 
 void Swarm_send::set_main_airplane(int sysid, int grp_id, float x, float y, float z) {
     QMap<int, Vehicle*> mp(MultiVehicleManager::instance()->my_vehicles());
@@ -36,6 +49,7 @@ void Swarm_send::store_airplane_group(int sysid, int group_id, bool flag, bool s
         }
     }
 }
+
 void Swarm_send::caculate_pos(int sysid,float x,float y,float z){
     qDebug()<<__FUNCTION__<<sysid<<x<<y<<z;
     MultiVehicleManager::instance()->my_vehicles()[sysid]->parameterManager()->myswarm_param_send(sysid, "SWARM_X_OFFSET", FactMetaData::valueTypeFloat, x);
@@ -46,4 +60,9 @@ void Swarm_send::caculate_pos(int sysid,float x,float y,float z){
 void Swarm_send::set_absolute_altitude(int sysid, float altitude){
     qDebug()<<__FUNCTION__<<sysid<<altitude;
     MultiVehicleManager::instance()->my_vehicles()[sysid]->parameterManager()->myswarm_param_send(sysid, "SWARM_ABS_ALT", FactMetaData::valueTypeFloat, altitude);
+}
+
+void Swarm_send::emitMainAltitudeChanged(int vehicleId, double altitude){
+    qDebug() << __FUNCTION__ << "vehicleId:" << vehicleId << "altitude:" << altitude;
+    emit mainAltitudeChanged(vehicleId, altitude);
 }

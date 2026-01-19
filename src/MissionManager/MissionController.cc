@@ -32,6 +32,7 @@
 #include "MissionCommandTree.h"
 #include "QGC.h"
 #include "QGCLoggingCategory.h"
+#include "swarm_send.h"
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
@@ -230,8 +231,19 @@ void MissionController::sendToVehicle(void)
             sendItemsToVehicle(_managerVehicle, &emptyModel);
         } else {
             sendItemsToVehicle(_managerVehicle, _visualItems);
+            
+            // 获取起飞高度并发送信号给集群界面
+            if (_takeoffMissionItem && _managerVehicle) {
+                double takeoffAltitude = _takeoffMissionItem->altitude()->rawValue().toDouble();
+                int vehicleId = _managerVehicle->id();
+                qCDebug(MissionControllerLog) << "Sending takeoff altitude to swarm:" << vehicleId << takeoffAltitude;
+                
+                // 通过Swarm_send发射信号
+                if (Swarm_send::instance()) {
+                    Swarm_send::instance()->emitMainAltitudeChanged(vehicleId, takeoffAltitude);
+                }
+            }
         }
-        qDebug()<<__FUNCTION__;
         setDirty(false);
     }
 }
