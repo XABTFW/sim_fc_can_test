@@ -58,6 +58,19 @@ ToolStripActionList {
             onTriggered:{
                 yilongdeswarmloader.item.message()
             }
+        },
+        ToolStripAction {
+            text:           qsTr("定点打击")
+            iconSource:     "/InstrumentValueIcons/target.svg"
+
+            onTriggered:{
+                if (precisionStrikeWindow) {
+                    precisionStrikeWindow.show()
+                    precisionStrikeWindow.raise()
+                } else {
+                    console.log("定点打击窗口未加载")
+                }
+            }
         }
     ]
 }

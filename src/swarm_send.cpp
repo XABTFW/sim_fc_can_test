@@ -51,18 +51,18 @@ void Swarm_send::store_airplane_group(int sysid, int group_id, bool flag, bool s
 }
 
 void Swarm_send::caculate_pos(int sysid,float x,float y,float z){
-    qDebug()<<__FUNCTION__<<sysid<<x<<y<<z;
+    // 性能优化：移除调试日志
     MultiVehicleManager::instance()->my_vehicles()[sysid]->parameterManager()->myswarm_param_send(sysid, "SWARM_X_OFFSET", FactMetaData::valueTypeFloat, x);
     MultiVehicleManager::instance()->my_vehicles()[sysid]->parameterManager()->myswarm_param_send(sysid, "SWARM_Y_OFFSET", FactMetaData::valueTypeFloat, y);
     MultiVehicleManager::instance()->my_vehicles()[sysid]->parameterManager()->myswarm_param_send(sysid, "SWARM_Z_OFFSET", FactMetaData::valueTypeFloat, z);
 }
 
 void Swarm_send::set_absolute_altitude(int sysid, float altitude){
-    qDebug()<<__FUNCTION__<<sysid<<altitude;
+    // 性能优化：移除调试日志
     MultiVehicleManager::instance()->my_vehicles()[sysid]->parameterManager()->myswarm_param_send(sysid, "SWARM_ABS_ALT", FactMetaData::valueTypeFloat, altitude);
 }
 
 void Swarm_send::emitMainAltitudeChanged(int vehicleId, double altitude){
-    qDebug() << __FUNCTION__ << "vehicleId:" << vehicleId << "altitude:" << altitude;
+    // 性能优化：移除调试日志
     emit mainAltitudeChanged(vehicleId, altitude);
 }

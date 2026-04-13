@@ -29,27 +29,31 @@ import QtQuick3D.Physics 6.8
 import QtQuick3D.AssetUtils 6.8
 Window {
     id: root
-    title: "我的编队"
+    title: "我的编队 - 战术控制面板"
     width: 1600
     height: 1050
     minimumWidth: 1200
     minimumHeight: 850
     visible: false
-    color: "#1e1e2e"  // 深色主题背景
+    color: "#0B1021"  // 深黑蓝色背景 (FUI风格)
 
-    // 样式常量
-    property color primaryColor: "#5e81ac"  // 主色调蓝
-    property color secondaryColor: "#a3be8c"  // 辅助色绿
-    property color accentColor: "#ebcb8b"   // 强调色黄
-    property color dangerColor: "#bf616a"   // 危险操作红
-    property color textColor: "#eceff4"     // 文字颜色
-    property color panelColor: "#2e3440"    // 面板颜色
-    property color controlColor: "#3b4252"  // 控件颜色
+    // 商业级 FUI 科幻风格配色方案 - 优化版
+    property color primaryColor: "#00E5FF"  // 霓虹青 (主高亮色 - 用于关键操作)
+    property color secondaryColor: "#00FF88"  // 电光绿 (成功/确认)
+    property color accentColor: "#00D4FF"   // 青色强调
+    property color dangerColor: "#FF3366"   // 霓虹红 (危险操作)
+    property color textColor: "#FFFFFF"     // 纯白色文字 (数据显示)
+    property color textColorDim: "#6B7280"  // 暗灰色文字 (标签)
+    property color panelColor: "#1E293B"    // 深灰蓝面板 (比背景稍亮)
+    property color controlColor: "#252A3A"  // 控件背景色
+    property color borderColor: "#00E5FF"   // 霓虹青边框 (少用)
+    property color gridColor: "#00E5FF"     // 网格线颜色 (极低透明度)
+    property color glowColor: "#00E5FF"     // 发光颜色
 
-    property color modelColor1: "#FBB72F"  // 模型颜色
-    property color modelColor2: "#30677A"  // 模型颜色
-    property color modelColor3: "#EA8C89"  // 模型颜色
-    property color modelColor4: "#3be292"  // 模型颜色
+    property color modelColor1: "#00E5FF"  // 霓虹青 - 第一组
+    property color modelColor2: "#00FF88"  // 电光绿 - 第二组
+    property color modelColor3: "#FF8C00"  // 霓虹橙 - 第三组（改为橙色）
+    property color modelColor4: "#FFD700"  // 金色 - 第四组
 
     // 各组连接的模型数量
     property int group1Count: 0
@@ -137,6 +141,12 @@ Window {
     // 添加交互消息的函数
     // msgType: "info", "success", "warning", "error"
     function addMessage(msg, msgType) {
+        // 过滤空消息
+        if (!msg || msg.toString().trim() === "") {
+            console.log("[addMessage] 忽略空消息");
+            return;
+        }
+
         if (!msgType) msgType = "info";
         var timestamp = new Date().toLocaleTimeString(Qt.locale(), "HH:mm:ss");
         messageListModel.append({
@@ -177,7 +187,7 @@ Window {
     // 根据vehicleId获取组ID
     function getGroupIdByVehicleId(vehicleId) {
         for (var i = 0; i < plan_arr.length; i++) {
-            if (plan_arr[i].objectName == vehicleId.toString() || 
+            if (plan_arr[i].objectName == vehicleId.toString() ||
                 parseInt(plan_arr[i].objectName) === vehicleId) {
                 // 检查是否是主机
                 if (plan_arr[i].is_main || plan_arr[i].set_main === 1) {
@@ -220,12 +230,24 @@ Window {
         width: 400
         height: 280
         modal: true
-        closePolicy: Popup.NoAutoClose  // 必须点击按钮才能关闭
+        closePolicy: Popup.NoAutoClose
         background: Rectangle {
-            color: "#3b4252"
-            radius: 12
+            color: "#1A1E2E"
+            radius: 0
             border.color: root.primaryColor
             border.width: 2
+            opacity: 0.98
+
+            // 外发光
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -3
+                color: "transparent"
+                border.color: root.primaryColor
+                border.width: 1
+                radius: 0
+                opacity: 0.4
+            }
         }
         contentItem: ColumnLayout {
             anchors.fill: parent
@@ -233,25 +255,34 @@ Window {
             spacing: 15
 
             Label {
-                text: "⚙️ 筹划参数设置"
+                text: "[ 筹划参数设置 ]"
                 font.bold: true
-                font.pixelSize: 18
+                font.pixelSize: 16
+                font.family: "Monospace"
                 color: primaryColor
                 Layout.alignment: Qt.AlignHCenter
+
+                // 文字发光
+                style: Text.Normal
+                styleColor: primaryColor
             }
 
             Label {
                 text: "请设置飞机之间的间距和高度差"
-                font.pixelSize: 14
+                font.pixelSize: 12
+                font.family: "Sans Serif"
                 color: textColor
                 Layout.alignment: Qt.AlignHCenter
+                opacity: 0.8
             }
 
             Rectangle {
                 Layout.fillWidth: true
                 height: 100
-                color: "#2e3440"
-                radius: 8
+                color: "#252A3A"
+                radius: 0
+                border.color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
+                border.width: 1
 
                 ColumnLayout {
                     anchors.centerIn: parent
@@ -263,8 +294,9 @@ Window {
 
                         Label {
                             text: "飞机间距:"
-                            font.pixelSize: 14
-                            color: "#88c0d0"
+                            font.pixelSize: 13
+                            font.family: "Monospace"
+                            color: primaryColor
                         }
 
                         TextField {
@@ -274,47 +306,20 @@ Window {
                             height: 30
                             validator: IntValidator { bottom: 1; top: 99 }
                             horizontalAlignment: Text.AlignHCenter
+                            font.family: "Monospace"
+                            font.bold: true
                             background: Rectangle {
-                                color: "#4c566a"
-                                radius: 4
+                                color: "#1A1E2E"
+                                radius: 0
+                                border.color: planDistanceInput.activeFocus ? primaryColor : Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.5)
+                                border.width: 1
                             }
-                            color: "white"
-                        }
-
-                        Label {
-                            text: "米"
-                            font.pixelSize: 14
                             color: textColor
                         }
-                    }
-
-                    RowLayout {
-                        spacing: 10
-                        Layout.alignment: Qt.AlignHCenter
-
-                        Label {
-                            text: "默认高度:"
-                            font.pixelSize: 14
-                            color: "#a3be8c"
-                        }
-
-                        TextField {
-                            id: planHeightInput
-                            text: input6.text
-                            width: 60
-                            height: 30
-                            validator: IntValidator { bottom: -99; top: 99 }
-                            horizontalAlignment: Text.AlignHCenter
-                            background: Rectangle {
-                                color: "#4c566a"
-                                radius: 4
-                            }
-                            color: "white"
-                        }
 
                         Label {
                             text: "米"
-                            font.pixelSize: 14
+                            font.pixelSize: 13
                             color: textColor
                         }
                     }
@@ -338,9 +343,8 @@ Window {
                     text: "确认筹划"
                     color: secondaryColor
                     onClicked: {
-                        // 更新间距和高度参数
+                        // 更新间距参数
                         input5.text = planDistanceInput.text;
-                        input6.text = planHeightInput.text;
 
                         // 执行筹划操作
                         if (pendingPlanAction) {
@@ -351,7 +355,7 @@ Window {
 
                         // 显示确认提示
                         swarmOpPopup.showPopup(0, 3, 0, 0, 0,
-                            "筹划完成，间距: " + input5.text + "米，高度: " + input6.text + "米");
+                            "筹划完成，间距: " + input5.text + "米");
                     }
                 }
             }
@@ -361,7 +365,6 @@ Window {
     // 显示筹划参数设置弹窗
     function showPlanParamPopup(action) {
         planDistanceInput.text = input5.text;
-        planHeightInput.text = input6.text;
         pendingPlanAction = action;
         planParamPopup.open();
     }
@@ -371,13 +374,22 @@ Window {
         anchors.fill: parent
         color: "transparent"
 
-        // 顶部控制栏
+        // 顶部控制栏 - 无边框卡片风格
         Rectangle {
             id: topBar
             width: parent.width
             height: 80
-            color: root.panelColor
-            radius: 8
+            color: "#1E293B"  // 深灰蓝，比背景稍亮
+            radius: 0
+            border.width: 0  // 去掉边框
+
+            // 底部分隔线（极细）
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: 1
+                color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.2)
+            }
 
             RowLayout {
                 anchors.fill: parent
@@ -414,9 +426,11 @@ Window {
                     }
 
                     Label {
-                        text: "架"
-                        color: root.textColor
-                        font.pixelSize: 14
+                        text: "UAV"
+                        color: textColorDim  // 暗灰色标签
+                        font.pixelSize: 10
+                        font.family: "Monospace"
+                        font.bold: true
                     }
                 }
 
@@ -432,18 +446,30 @@ Window {
                             implicitHeight: 18
                             x: 2
                             y: (parent.height - height) / 2
-                            radius: 9
-                            color: group1Switch.checked ? "#4CAF50" : "#5c6370"
-                            border.color: group1Switch.checked ? "#45a049" : "#6c7380"
+                            radius: 0
+                            color: "transparent"
+                            border.color: group1Switch.checked ? root.secondaryColor : Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, 0.3)
                             border.width: 1
                             Rectangle {
                                 x: group1Switch.checked ? parent.width - width - 2 : 2
                                 y: 2
                                 width: 14
                                 height: 14
-                                radius: 7
-                                color: group1Switch.checked ? "white" : "#9ca3af"
+                                radius: 0
+                                color: group1Switch.checked ? root.secondaryColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.3)
+                                border.color: group1Switch.checked ? root.secondaryColor : "transparent"
+                                border.width: 1
                                 Behavior on x { NumberAnimation { duration: 150 } }
+
+                                // 发光效果
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: -2
+                                    color: "transparent"
+                                    border.color: parent.color
+                                    border.width: 1
+                                    opacity: group1Switch.checked ? 0.5 : 0
+                                }
                             }
                         }
                     }
@@ -456,9 +482,11 @@ Window {
                     }
 
                     Label {
-                        text: "第一组 " + group1Count + " 架"
-                        color: root.textColor
-                        font.pixelSize: 14
+                        text: "[ GRP-1: " + group1Count + " ]"
+                        color: textColor  // 亮白色数据
+                        font.pixelSize: 11
+                        font.family: "Monospace"
+                        font.bold: true
                         Layout.alignment: Qt.AlignVCenter
                     }
 
@@ -474,18 +502,30 @@ Window {
                             implicitHeight: 18
                             x: 2
                             y: (parent.height - height) / 2
-                            radius: 9
-                            color: group2Switch.checked ? "#4CAF50" : "#5c6370"
-                            border.color: group2Switch.checked ? "#45a049" : "#6c7380"
+                            radius: 0
+                            color: "transparent"
+                            border.color: group2Switch.checked ? root.secondaryColor : Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, 0.3)
                             border.width: 1
                             Rectangle {
                                 x: group2Switch.checked ? parent.width - width - 2 : 2
                                 y: 2
                                 width: 14
                                 height: 14
-                                radius: 7
-                                color: group2Switch.checked ? "white" : "#9ca3af"
+                                radius: 0
+                                color: group2Switch.checked ? root.secondaryColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.3)
+                                border.color: group2Switch.checked ? root.secondaryColor : "transparent"
+                                border.width: 1
                                 Behavior on x { NumberAnimation { duration: 150 } }
+
+                                // 发光效果
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: -2
+                                    color: "transparent"
+                                    border.color: parent.color
+                                    border.width: 1
+                                    opacity: group2Switch.checked ? 0.5 : 0
+                                }
                             }
                         }
                     }
@@ -498,9 +538,11 @@ Window {
                     }
 
                     Label {
-                        text: "第二组 " + group2Count + " 架"
-                        color: root.textColor
-                        font.pixelSize: 14
+                        text: "[ GRP-2: " + group2Count + " ]"
+                        color: textColor  // 亮白色数据
+                        font.pixelSize: 11
+                        font.family: "Monospace"
+                        font.bold: true
                         Layout.alignment: Qt.AlignVCenter
                     }
 
@@ -516,18 +558,30 @@ Window {
                             implicitHeight: 18
                             x: 2
                             y: (parent.height - height) / 2
-                            radius: 9
-                            color: group3Switch.checked ? "#4CAF50" : "#5c6370"
-                            border.color: group3Switch.checked ? "#45a049" : "#6c7380"
+                            radius: 0
+                            color: "transparent"
+                            border.color: group3Switch.checked ? root.secondaryColor : Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, 0.3)
                             border.width: 1
                             Rectangle {
                                 x: group3Switch.checked ? parent.width - width - 2 : 2
                                 y: 2
                                 width: 14
                                 height: 14
-                                radius: 7
-                                color: group3Switch.checked ? "white" : "#9ca3af"
+                                radius: 0
+                                color: group3Switch.checked ? root.secondaryColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.3)
+                                border.color: group3Switch.checked ? root.secondaryColor : "transparent"
+                                border.width: 1
                                 Behavior on x { NumberAnimation { duration: 150 } }
+
+                                // 发光效果
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: -2
+                                    color: "transparent"
+                                    border.color: parent.color
+                                    border.width: 1
+                                    opacity: group3Switch.checked ? 0.5 : 0
+                                }
                             }
                         }
                     }
@@ -540,9 +594,11 @@ Window {
                     }
 
                     Label {
-                        text: "第三组 " + group3Count + " 架"
-                        color: root.textColor
-                        font.pixelSize: 14
+                        text: "[ GRP-3: " + group3Count + " ]"
+                        color: textColor  // 亮白色数据
+                        font.pixelSize: 11
+                        font.family: "Monospace"
+                        font.bold: true
                         Layout.alignment: Qt.AlignVCenter
                     }
 
@@ -558,18 +614,30 @@ Window {
                             implicitHeight: 18
                             x: 2
                             y: (parent.height - height) / 2
-                            radius: 9
-                            color: group4Switch.checked ? "#4CAF50" : "#5c6370"
-                            border.color: group4Switch.checked ? "#45a049" : "#6c7380"
+                            radius: 0
+                            color: "transparent"
+                            border.color: group4Switch.checked ? root.secondaryColor : Qt.rgba(root.borderColor.r, root.borderColor.g, root.borderColor.b, 0.3)
                             border.width: 1
                             Rectangle {
                                 x: group4Switch.checked ? parent.width - width - 2 : 2
                                 y: 2
                                 width: 14
                                 height: 14
-                                radius: 7
-                                color: group4Switch.checked ? "white" : "#9ca3af"
+                                radius: 0
+                                color: group4Switch.checked ? root.secondaryColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.3)
+                                border.color: group4Switch.checked ? root.secondaryColor : "transparent"
+                                border.width: 1
                                 Behavior on x { NumberAnimation { duration: 150 } }
+
+                                // 发光效果
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: -2
+                                    color: "transparent"
+                                    border.color: parent.color
+                                    border.width: 1
+                                    opacity: group4Switch.checked ? 0.5 : 0
+                                }
                             }
                         }
                     }
@@ -585,9 +653,11 @@ Window {
 
                     Label {
                         id:modellable4
-                        text: "第四组 " + group4Count + " 架"
-                        color: root.textColor
-                        font.pixelSize: 14
+                        text: "[ GRP-4: " + group4Count + " ]"
+                        color: textColor  // 亮白色数据
+                        font.pixelSize: 11
+                        font.family: "Monospace"
+                        font.bold: true
                         Layout.alignment: Qt.AlignVCenter
                        // visible: false
                     }
@@ -633,17 +703,45 @@ Window {
                 // 超出部分裁剪（可选）
                 clip: true
 
-            color: "#252538"
-            radius: 8
-            border.color: "#4c566a"
-            border.width: 1
+            color: "#0B1021"  // 深黑蓝色背景
+            radius: 0
+            border.width: 0  // 去掉边框
+
+            // 全息网格背景层（极低透明度，不喧宾夺主）
+            Canvas {
+                id: holographicGrid
+                anchors.fill: parent
+                opacity: 0.05  // 降低到5%
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.strokeStyle = root.gridColor;
+                    ctx.lineWidth = 0.5;
+
+                    // 绘制垂直网格线
+                    var gridSize = 40;
+                    for (var x = 0; x < width; x += gridSize) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, height);
+                        ctx.stroke();
+                    }
+
+                    // 绘制水平网格线
+                    for (var y = 0; y < height; y += gridSize) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(width, y);
+                        ctx.stroke();
+                    }
+                }
+            }
 
             View3D {
                 id: control
                 anchors.fill:parent
-                //背景
+                //背景 - 深空背景
                 environment: SceneEnvironment {
-                   clearColor: "skyblue"
+                   clearColor: "#0B1021"  // 深黑蓝色
                    backgroundMode: SceneEnvironment.Color
                 }
                 Component.onCompleted: {
@@ -840,8 +938,8 @@ Window {
                            visible: false
                            onPaint: { //    |的上半部分
                                var vtx = getContext("2d")
-                               vtx.strokeStyle = "black"
-                               vtx.linewidth = 2
+                               vtx.strokeStyle = "#6B7280"  // 更暗的灰色
+                               vtx.lineWidth = 1  // 更细的线
                                var startX = control.width / 2
                                var startY = 0
 
@@ -861,8 +959,8 @@ Window {
                            visible: false
                            onPaint: {
                                var vtx = getContext("2d")
-                               vtx.strokeStyle = "black"
-                               vtx.linewidth = 2
+                               vtx.strokeStyle = "#6B7280"  // 更暗的灰色
+                               vtx.lineWidth = 1  // 更细的线
                                var startX = control.width / 2
                                var startY = (control.height ) / 2
 
@@ -882,8 +980,8 @@ Window {
                            visible: false
                            onPaint: {
                                var vtx = getContext("2d")
-                               vtx.strokeStyle = "black"
-                               vtx.linewidth = 2
+                               vtx.strokeStyle = "#6B7280"  // 更暗的灰色
+                               vtx.lineWidth = 1  // 更细的线
                                var startX = 0
                                var startY = (control.height ) / 2
 
@@ -902,8 +1000,8 @@ Window {
                            visible: false
                            onPaint: {
                                var vtx = getContext("2d")
-                               vtx.strokeStyle = "black"
-                               vtx.linewidth = 2
+                               vtx.strokeStyle = "#6B7280"  // 更暗的灰色
+                               vtx.lineWidth = 1  // 更细的线
                                var startX = control.width / 2
                                var startY = (control.height ) / 2
 
@@ -923,7 +1021,7 @@ Window {
                                id: name
                                text: "  " + sphere_node.objectName + "_" + sphere_node.group_id
                                font.pixelSize: 62
-                               color: sphere_node.set_main ? "red":"black"
+                               color: sphere_node.set_main ? "red" : "white"  // 从机改为白色
                            }
                            id: sphere_node
                            objectName: "1"
@@ -1002,7 +1100,7 @@ Window {
                                id: name2
                                text: "  " + sphere_node2.objectName + "_" + sphere_node2.group_id
                                font.pixelSize: 62
-                               color: sphere_node2.set_main ? "red":"black"
+                               color: sphere_node2.set_main ? "red" : "white"
                            }
                            id: sphere_node2
                            objectName: "2"
@@ -1072,7 +1170,7 @@ Window {
                                id: name3
                                text: "  " + sphere_node3.objectName + "_" + sphere_node3.group_id
                                font.pixelSize: 62
-                               color: sphere_node3.set_main ? "red":"black"
+                               color: sphere_node3.set_main ? "red" : "white"
                            }
                            id: sphere_node3
                            objectName: "3"
@@ -1139,7 +1237,7 @@ Window {
                                id: name4
                                text: "  " + sphere_node4.objectName + "_" + sphere_node4.group_id
                                font.pixelSize: 62
-                               color: sphere_node4.set_main ? "red":"black"
+                               color: sphere_node4.set_main ? "red" : "white"
                            }
                            id: sphere_node4
                            objectName: "4"
@@ -1205,7 +1303,7 @@ Window {
                                id: name5
                                text: "  " + sphere_node5.objectName + "_" + sphere_node5.group_id
                                font.pixelSize: 62
-                               color: sphere_node5.set_main ? "red":"black"
+                               color: sphere_node5.set_main ? "red" : "white"
                            }
                            id: sphere_node5
                            objectName: "5"
@@ -1271,7 +1369,7 @@ Window {
                                id: name6
                                text: "  " + sphere_node6.objectName + "_" + sphere_node6.group_id
                                font.pixelSize: 62
-                               color: sphere_node6.set_main ? "red":"black"
+                               color: sphere_node6.set_main ? "red" : "white"
                            }
                            id: sphere_node6
                            objectName: "6"
@@ -1337,7 +1435,7 @@ Window {
                                id: name7
                                text: "  " + sphere_node7.objectName + "_" + sphere_node7.group_id
                                font.pixelSize: 62
-                               color: sphere_node7.set_main ? "red":"black"
+                               color: sphere_node7.set_main ? "red" : "white"
                            }
                            id: sphere_node7
                            objectName: "7"
@@ -1403,7 +1501,7 @@ Window {
                                id: name8
                                text: "  " + sphere_node8.objectName + "_" + sphere_node8.group_id
                                font.pixelSize: 62
-                               color: sphere_node8.set_main ? "red":"black"
+                               color: sphere_node8.set_main ? "red" : "white"
                            }
                            id: sphere_node8
                            objectName: "8"
@@ -1469,7 +1567,7 @@ Window {
                                id: name9
                                text: "  " + sphere_node9.objectName + "_" + sphere_node9.group_id
                                font.pixelSize: 62
-                               color: sphere_node9.set_main ? "red":"black"
+                               color: sphere_node9.set_main ? "red" : "white"
                            }
                            id: sphere_node9
                            objectName: "9"
@@ -1535,7 +1633,7 @@ Window {
                                id: name10
                                text: "  " + sphere_node10.objectName + "_" + sphere_node10.group_id
                                font.pixelSize: 62
-                               color: sphere_node10.set_main ? "red":"black"
+                               color: sphere_node10.set_main ? "red" : "white"
                            }
                            id: sphere_node10
                            objectName: "10"
@@ -1600,7 +1698,7 @@ Window {
                                id: name11
                                text: "  " + sphere_node11.objectName + "_" + sphere_node11.group_id
                                font.pixelSize: 62
-                               color: sphere_node11.set_main ? "red":"black"
+                               color: sphere_node11.set_main ? "red" : "white"
                            }
                            id: sphere_node11
                            objectName: "11"
@@ -1666,7 +1764,7 @@ Window {
                                id: name12
                                text: "  " + sphere_node12.objectName + "_" + sphere_node12.group_id
                                font.pixelSize: 62
-                               color: sphere_node12.set_main ? "red":"black"
+                               color: sphere_node12.set_main ? "red" : "white"
                            }
                            id: sphere_node12
                            objectName: "12"
@@ -1733,7 +1831,7 @@ Window {
                                id: name13
                                text: "  " + sphere_node13.objectName + "_" + sphere_node13.group_id
                                font.pixelSize: 62
-                               color: sphere_node13.set_main ? "red":"black"
+                               color: sphere_node13.set_main ? "red" : "white"
                            }
                            id: sphere_node13
                            objectName: "13"
@@ -1799,7 +1897,7 @@ Window {
                                id: name14
                                text: "  " + sphere_node14.objectName + "_" + sphere_node14.group_id
                                font.pixelSize: 62
-                               color: sphere_node14.set_main ? "red":"black"
+                               color: sphere_node14.set_main ? "red" : "white"
                            }
                            id: sphere_node14
                            objectName: "14"
@@ -1865,7 +1963,7 @@ Window {
                                id: name15
                                text: "  " + sphere_node15.objectName + "_" + sphere_node15.group_id
                                font.pixelSize: 62
-                               color: sphere_node15.set_main ? "red":"black"
+                               color: sphere_node15.set_main ? "red" : "white"
                            }
                            id: sphere_node15
                            objectName: "15"
@@ -1931,7 +2029,7 @@ Window {
                                id: name16
                                text: "  " + sphere_node16.objectName + "_" + sphere_node16.group_id
                                font.pixelSize: 62
-                               color: sphere_node16.set_main ? "red":"black"
+                               color: sphere_node16.set_main ? "red" : "white"
                            }
                            id: sphere_node16
                            objectName: "16"
@@ -1997,7 +2095,7 @@ Window {
                                id: name17
                                text: "  " + sphere_node17.objectName + "_" + sphere_node17.group_id
                                font.pixelSize: 62
-                               color: sphere_node17.set_main ? "red":"black"
+                               color: sphere_node17.set_main ? "red" : "white"
                            }
                            id: sphere_node17
                            objectName: "17"
@@ -2063,7 +2161,7 @@ Window {
                                id: name18
                                text: "  " + sphere_node18.objectName + "_" + sphere_node18.group_id
                                font.pixelSize: 62
-                               color: sphere_node18.set_main ? "red":"black"
+                               color: sphere_node18.set_main ? "red" : "white"
                            }
                            id: sphere_node18
                            objectName: "18"
@@ -2130,7 +2228,7 @@ Window {
                                id: name19
                                text: "  " + sphere_node19.objectName + "_" + sphere_node19.group_id
                                font.pixelSize: 62
-                               color: sphere_node19.set_main ? "red":"black"
+                               color: sphere_node19.set_main ? "red" : "white"
                            }
                            id: sphere_node19
                            objectName: "19"
@@ -2196,7 +2294,7 @@ Window {
                                id: name20
                                text: "  " + sphere_node20.objectName + "_" + sphere_node20.group_id
                                font.pixelSize: 62
-                               color: sphere_node20.set_main ? "red":"black"
+                               color: sphere_node20.set_main ? "red" : "white"
                            }
                            id: sphere_node20
                            objectName: "20"
@@ -2261,7 +2359,7 @@ Window {
                                id: name21
                                text: "  " + sphere_node21.objectName + "_" + sphere_node21.group_id
                                font.pixelSize: 62
-                               color: sphere_node21.set_main ? "red":"black"
+                               color: sphere_node21.set_main ? "red" : "white"
                            }
                            id: sphere_node21
                            objectName: "21"
@@ -2327,7 +2425,7 @@ Window {
                                id: name22
                                text: "  " + sphere_node22.objectName + "_" + sphere_node22.group_id
                                font.pixelSize: 62
-                               color: sphere_node22.set_main ? "red":"black"
+                               color: sphere_node22.set_main ? "red" : "white"
                            }
                            id: sphere_node22
                            objectName: "22"
@@ -2393,7 +2491,7 @@ Window {
                                id: name23
                                text: "  " + sphere_node23.objectName + "_" + sphere_node23.group_id
                                font.pixelSize: 62
-                               color: sphere_node23.set_main ? "red":"black"
+                               color: sphere_node23.set_main ? "red" : "white"
                            }
                            id: sphere_node23
                            objectName: "23"
@@ -2458,7 +2556,7 @@ Window {
                                id: name24
                                text: "  " + sphere_node24.objectName + "_" + sphere_node24.group_id
                                font.pixelSize: 62
-                               color: sphere_node24.set_main ? "red":"black"
+                               color: sphere_node24.set_main ? "red" : "white"
                            }
                            id: sphere_node24
                            objectName: "24"
@@ -2524,7 +2622,7 @@ Window {
                                id: name25
                                text: "  " + sphere_node25.objectName + "_" + sphere_node25.group_id
                                font.pixelSize: 62
-                               color: sphere_node25.set_main ? "red":"black"
+                               color: sphere_node25.set_main ? "red" : "white"
                            }
                            id: sphere_node25
                            objectName: "25"
@@ -2588,7 +2686,7 @@ Window {
                                id: name26
                                text: "  " + sphere_node26.objectName + "_" + sphere_node26.group_id
                                font.pixelSize: 62
-                               color: sphere_node26.set_main ? "red":"black"
+                               color: sphere_node26.set_main ? "red" : "white"
                            }
                            id: sphere_node26
                            objectName: "26"
@@ -2653,7 +2751,7 @@ Window {
                                id: name27
                                text: "  " + sphere_node27.objectName + "_" + sphere_node27.group_id
                                font.pixelSize: 62
-                               color: sphere_node27.set_main ? "red":"black"
+                               color: sphere_node27.set_main ? "red" : "white"
                            }
                            id: sphere_node27
                            objectName: "27"
@@ -2718,7 +2816,7 @@ Window {
                                id: name28
                                text: "  " + sphere_node28.objectName + "_" + sphere_node28.group_id
                                font.pixelSize: 62
-                               color: sphere_node28.set_main ? "red":"black"
+                               color: sphere_node28.set_main ? "red" : "white"
                            }
                            id: sphere_node28
                            objectName: "28"
@@ -2783,7 +2881,7 @@ Window {
                                id: name29
                                text: "  " + sphere_node29.objectName + "_" + sphere_node29.group_id
                                font.pixelSize: 62
-                               color: sphere_node29.set_main ? "red":"black"
+                               color: sphere_node29.set_main ? "red" : "white"
                            }
                            id: sphere_node29
                            objectName: "29"
@@ -2848,7 +2946,7 @@ Window {
                                id: name30
                                text: "  " + sphere_node30.objectName + "_" + sphere_node30.group_id
                                font.pixelSize: 62
-                               color: sphere_node30.set_main ? "red":"black"
+                               color: sphere_node30.set_main ? "red" : "white"
                            }
                            id: sphere_node30
                            objectName: "30"
@@ -2913,7 +3011,7 @@ Window {
                                id: name31
                                text: "  " + sphere_node31.objectName + "_" + sphere_node31.group_id
                                font.pixelSize: 62
-                               color: sphere_node31.set_main ? "red":"black"
+                               color: sphere_node31.set_main ? "red" : "white"
                            }
                            id: sphere_node31
                            objectName: "31"
@@ -2978,7 +3076,7 @@ Window {
                                id: name32
                                text: "  " + sphere_node32.objectName + "_" + sphere_node32.group_id
                                font.pixelSize: 62
-                               color: sphere_node32.set_main ? "red":"black"
+                               color: sphere_node32.set_main ? "red" : "white"
                            }
                            id: sphere_node32
                            objectName: "32"
@@ -3042,7 +3140,7 @@ Window {
                                id: name33
                                text: "  " + sphere_node33.objectName + "_" + sphere_node33.group_id
                                font.pixelSize: 62
-                               color: sphere_node33.set_main ? "red":"black"
+                               color: sphere_node33.set_main ? "red" : "white"
                            }
                            id: sphere_node33
                            objectName: "33"
@@ -3106,7 +3204,7 @@ Window {
                                id: name34
                                text: "  " + sphere_node34.objectName + "_" + sphere_node34.group_id
                                font.pixelSize: 62
-                               color: sphere_node34.set_main ? "red":"black"
+                               color: sphere_node34.set_main ? "red" : "white"
                            }
                            id: sphere_node34
                            objectName: "34"
@@ -3171,7 +3269,7 @@ Window {
                                id: name35
                                text: "  " + sphere_node35.objectName + "_" + sphere_node35.group_id
                                font.pixelSize: 62
-                               color: sphere_node35.set_main ? "red":"black"
+                               color: sphere_node35.set_main ? "red" : "white"
                            }
                            id: sphere_node35
                            objectName: "35"
@@ -3235,7 +3333,7 @@ Window {
                                id: name36
                                text: "  " + sphere_node36.objectName + "_" + sphere_node36.group_id
                                font.pixelSize: 62
-                               color: sphere_node36.set_main ? "red":"black"
+                               color: sphere_node36.set_main ? "red" : "white"
                            }
                            id: sphere_node36
                            objectName: "36"
@@ -3300,7 +3398,7 @@ Window {
                                id: name37
                                text: "  " + sphere_node37.objectName + "_" + sphere_node37.group_id
                                font.pixelSize: 62
-                               color: sphere_node37.set_main ? "red":"black"
+                               color: sphere_node37.set_main ? "red" : "white"
                            }
                            id: sphere_node37
                            objectName: "37"
@@ -3365,7 +3463,7 @@ Window {
                                id: name38
                                text: "  " + sphere_node38.objectName + "_" + sphere_node38.group_id
                                font.pixelSize: 62
-                               color: sphere_node38.set_main ? "red":"black"
+                               color: sphere_node38.set_main ? "red" : "white"
                            }
                            id: sphere_node38
                            objectName: "38"
@@ -3430,7 +3528,7 @@ Window {
                                id: name39
                                text: "  " + sphere_node39.objectName + "_" + sphere_node39.group_id
                                font.pixelSize: 62
-                               color: sphere_node39.set_main ? "red":"black"
+                               color: sphere_node39.set_main ? "red" : "white"
                            }
                            id: sphere_node39
                            objectName: "39"
@@ -3495,7 +3593,7 @@ Window {
                                id: name40
                                text: "  " + sphere_node40.objectName + "_" + sphere_node40.group_id
                                font.pixelSize: 62
-                               color: sphere_node40.set_main ? "red":"black"
+                               color: sphere_node40.set_main ? "red" : "white"
                            }
                            id: sphere_node40
                            objectName: "40"
@@ -3560,7 +3658,7 @@ Window {
                                id: name41
                                text: "  " + sphere_node41.objectName + "_" + sphere_node41.group_id
                                font.pixelSize: 62
-                               color: sphere_node41.set_main ? "red":"black"
+                               color: sphere_node41.set_main ? "red" : "white"
                            }
                            id: sphere_node41
                            objectName: "41"
@@ -3625,7 +3723,7 @@ Window {
                                id: name42
                                text: "  " + sphere_node42.objectName + "_" + sphere_node42.group_id
                                font.pixelSize: 62
-                               color: sphere_node42.set_main ? "red":"black"
+                               color: sphere_node42.set_main ? "red" : "white"
                            }
                            id: sphere_node42
                            objectName: "42"
@@ -3690,7 +3788,7 @@ Window {
                                id: name43
                                text: "  " + sphere_node43.objectName + "_" + sphere_node43.group_id
                                font.pixelSize: 62
-                               color: sphere_node43.set_main ? "red":"black"
+                               color: sphere_node43.set_main ? "red" : "white"
                            }
                            id: sphere_node43
                            objectName: "43"
@@ -3755,7 +3853,7 @@ Window {
                                id: name44
                                text: "  " + sphere_node44.objectName + "_" + sphere_node44.group_id
                                font.pixelSize: 62
-                               color: sphere_node44.set_main ? "red":"black"
+                               color: sphere_node44.set_main ? "red" : "white"
                            }
                            id: sphere_node44
                            objectName: "44"
@@ -3820,7 +3918,7 @@ Window {
                                id: name45
                                text: "  " + sphere_node45.objectName + "_" + sphere_node45.group_id
                                font.pixelSize: 62
-                               color: sphere_node45.set_main ? "red":"black"
+                               color: sphere_node45.set_main ? "red" : "white"
                            }
                            id: sphere_node45
                            objectName: "45"
@@ -3885,7 +3983,7 @@ Window {
                                id: name46
                                text: "  " + sphere_node46.objectName + "_" + sphere_node46.group_id
                                font.pixelSize: 62
-                               color: sphere_node46.set_main ? "red":"black"
+                               color: sphere_node46.set_main ? "red" : "white"
                            }
                            id: sphere_node46
                            objectName: "46"
@@ -3950,7 +4048,7 @@ Window {
                                id: name47
                                text: "  " + sphere_node47.objectName + "_" + sphere_node47.group_id
                                font.pixelSize: 62
-                               color: sphere_node47.set_main ? "red":"black"
+                               color: sphere_node47.set_main ? "red" : "white"
                            }
                            id: sphere_node47
                            objectName: "47"
@@ -4015,7 +4113,7 @@ Window {
                                id: name48
                                text: "  " + sphere_node48.objectName + "_" + sphere_node48.group_id
                                font.pixelSize: 62
-                               color: sphere_node48.set_main ? "red":"black"
+                               color: sphere_node48.set_main ? "red" : "white"
                            }
                            id: sphere_node48
                            objectName: "48"
@@ -4080,7 +4178,7 @@ Window {
                                id: name49
                                text: "  " + sphere_node49.objectName + "_" + sphere_node49.group_id
                                font.pixelSize: 62
-                               color: sphere_node49.set_main ? "red":"black"
+                               color: sphere_node49.set_main ? "red" : "white"
                            }
                            id: sphere_node49
                            objectName: "49"
@@ -4145,7 +4243,7 @@ Window {
                                id: name50
                                text: "  " + sphere_node50.objectName + "_" + sphere_node50.group_id
                                font.pixelSize: 62
-                               color: sphere_node50.set_main ? "red":"black"
+                               color: sphere_node50.set_main ? "red" : "white"
                            }
                            id: sphere_node50
                            objectName: "50"
@@ -4388,41 +4486,64 @@ Window {
             //}
         }
 
-        // 控制面板
+        // 控制面板 - 无边框卡片风格
         Rectangle {
             id: controlPanel
-            width: 245
+            width: 280  // 增大宽度以容纳所有按钮
             anchors {
                 top: topBar.bottom
                 bottom: bottomBar.top
                 left: parent.left
                 margins: 12
             }
-            color: root.panelColor
-            radius: 8
-            border.color: "#4c566a"
-            border.width: 1
+            color: "#1E293B"  // 深灰蓝
+            radius: 0
+            border.width: 0  // 去掉边框
+
+            // 左侧装饰线（极细发光线）
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 2
+                color: primaryColor
+                opacity: 0.6
+
+                // 发光效果
+                layer.enabled: true
+                layer.effect: ShaderEffect {
+                    property color glowColor: primaryColor
+                }
+            }
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 15
                 spacing: 20
 
-                // 分组设置
+                // 分组设置 - FUI风格
                 GroupBox {
                     title: "分组设置"
                     Layout.fillWidth: true
                     background: Rectangle {
                         color: "transparent"
-                        border.color: "#4c566a"
-                        radius: 4
+                        border.color: root.borderColor
+                        border.width: 1
+                        radius: 0
+                        opacity: 0.3
                     }
 
                     label: Label {
-                        text: parent.title
+                        text: "▸ " + parent.title
                         color: primaryColor
                         font.bold: true
+                        font.family: "Monospace"
+                        font.pixelSize: 13
                         leftPadding: 5
+
+                        // 文字发光效果
+                        style: Text.Normal
+                        styleColor: primaryColor
                     }
 
                     GridLayout {
@@ -4434,17 +4555,27 @@ Window {
                         Label {
                             text: "当前分组:"
                             color: root.textColor
+                            font.family: "Monospace"
+                            font.pixelSize: 12
                         }
                         Label {
                             text: group_num
                             font.bold: true
+                            font.family: "Monospace"
+                            font.pixelSize: 14
                             color: secondaryColor
+
+                            // 文字发光
+                            style: Text.Normal
+                            styleColor: secondaryColor
                         }
 
                         // 目标分组行：标签 + 输入框 + 分组按钮
                         Label {
                             text: "目标分组:"
-                            color: textColor
+                            color: textColorDim  // 暗灰色标签
+                            font.family: "Monospace"
+                            font.pixelSize: 11
                         }
                         Row {
                             spacing: 8  // 输入框与按钮的间距
@@ -4463,7 +4594,7 @@ Window {
                                     } else { // 执行分组
                                         // 先清除所有主机状态
                                         clearAllMainStatus();
-                                        
+
                                         if (input3.text === "1") {   //
                                             canv.visible = false
                                             canv2.visible = false
@@ -4796,7 +4927,9 @@ Window {
                         // 更改组号行：标签 + 输入框 + 更换分组按钮
                         Label {
                             text: "更改组号:"
-                            color: textColor
+                            color: textColorDim  // 暗灰色标签
+                            font.family: "Monospace"
+                            font.pixelSize: 11
                         }
                         Row {
                             spacing: 8  // 输入框与按钮的间距
@@ -4840,14 +4973,16 @@ Window {
                         // 独立分组操作
                         Label {
                             text: "独立分组:"
-                            color: textColor
+                            color: textColorDim  // 暗灰色标签
+                            font.family: "Monospace"
+                            font.pixelSize: 11
                         }
                         Row {
-                            spacing: 4
+                            spacing: 6  // 增加间距
 
                             CustomButton {
                                 text: "独立"
-                                width: 35
+                                width: 40  // 稍微增大按钮宽度
                                 color: root.accentColor
                                 onClicked: {
                                     // 检查输入的组号是否有效
@@ -4961,7 +5096,7 @@ Window {
 
                                     // 清空旧的位置映射，重新分配
                                     grp_pos_mp = {};
-                                    
+
                                     // 根据组数分配位置
                                     // 2组：位置1和2（左右）
                                     // 3组：位置1、2、3（左上、右上、左下）
@@ -5031,7 +5166,7 @@ Window {
                             CustomTextField {
                                 id: input_independent_group
                                 text: "2"
-                                width: 30
+                                width: 35  // 稍微增大输入框宽度
                                 validator: IntValidator { bottom: 1; top: 4 }
                             }
                             Label {
@@ -5041,7 +5176,7 @@ Window {
                             }
                             CustomButton {
                                 text: "合并"
-                                width: 35
+                                width: 40  // 稍微增大按钮宽度
                                 color: secondaryColor
                                 onClicked: {
                                     // 需要选中至少2个主机才能合并
@@ -5354,62 +5489,6 @@ Window {
                         }
 
                         RowLayout {
-                            spacing: 8
-                            Label {
-                                text: "高度:"
-                                color: textColor
-                                font.pixelSize: 12
-                            }
-                            CustomTextField {
-                                id: input6
-                                text: "0"
-                                width: 30
-                                validator: IntValidator { bottom: -99; top: 99 }
-                            }
-                            Label {
-                                text: "米"
-                                color: textColor
-                                font.pixelSize: 12
-                            }
-                            Item { width: 10 }
-                            Label {
-                                text: "东" + relativeEast
-                                color: "#a3be8c"
-                                font.pixelSize: 11
-                            }
-                            Label {
-                                text: "北" + relativeNorth
-                                color: "#a3be8c"
-                                font.pixelSize: 11
-                            }
-                            Label {
-                                text: "上" + relativeAlt
-                                color: "#a3be8c"
-                                font.pixelSize: 11
-                            }
-                        }
-
-                        RowLayout {
-                        CustomButton {
-                            text: "设置高度"
-                            Layout.columnSpan: 2
-                            Layout.fillWidth: true
-                            color: root.primaryColor
-                            onClicked: {
-                                if (!mouse_area.pickNode) {
-                                    return
-                                }
-
-                                mouse_area.pickNode.model_z = Number(input6.text)
-                                if (mouse_area.pickNode.is_connected) {
-                                    idpos_map[mouse_area.pickNode.objectName][2] = Number(input6.text)
-                                }
-
-                                show_position(mouse_area.pickNode) // 界面显示数据
-                                updateRelativePosition(mouse_area.pickNode)  // 更新相对坐标
-                                send_all_airplane_pos(mouse_area.pickNode.group_id, 0)
-                            }
-                        }
                         CustomButton {
                             text: "选定主机"
                             Layout.columnSpan: 2
@@ -5460,7 +5539,8 @@ Window {
                             text: "起飞"
                             Layout.columnSpan: 2
                             Layout.fillWidth: true
-                            color: "#03DE6D"
+                            color: secondaryColor  // 电光绿
+                            isPrimary: true  // 主要操作，实心填充+强发光
                             onClicked: {
                                 executeCommandToEnabledGroups(1, 0, 0, 0, 0)
                             }
@@ -5469,7 +5549,8 @@ Window {
                             text: "降落"
                             Layout.columnSpan: 2
                             Layout.fillWidth: true
-                            color: root.dangerColor
+                            color: root.dangerColor  // 霓虹红
+                            isPrimary: true  // 主要操作，实心填充+强发光
                             onClicked: {
                                 executeCommandToEnabledGroups(0, 0, 1, 0, 0)
                             }
@@ -5488,12 +5569,12 @@ Window {
                 right: parent.right
                 bottom: bottomBar.top
                 margins: 12
-                bottomMargin: 6
+                bottomMargin: 0
             }
-            height: 150
+            height: 270
             color: "transparent"
 
-            // 设置绝对高度弹窗
+            // 设置绝对高度弹窗 - FUI风格
             Popup {
                 id: setHeightDialog
                 modal: true
@@ -5501,117 +5582,140 @@ Window {
                 width: 380
                 height: 200
                 closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-                
+
                 property int targetGroupId: 1
-                
+
                 background: Rectangle {
-                    color: "#2e3440"
+                    color: "#1A1E2E"
                     border.color: primaryColor
                     border.width: 2
-                    radius: 12
+                    radius: 0
+                    opacity: 0.98
+
+                    // 外发光
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: -3
+                        color: "transparent"
+                        border.color: primaryColor
+                        border.width: 1
+                        radius: 0
+                        opacity: 0.4
+                    }
                 }
-                
+
                 contentItem: Column {
                     anchors.fill: parent
                     spacing: 0
-                    
+
                     // 标题栏
                     Rectangle {
                         width: parent.width
                         height: 45
-                        color: "#3b4252"
-                        radius: 12
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            width: parent.width
-                            height: 12
-                            color: parent.color
-                        }
+                        color: "#252A3A"
+                        radius: 0
+                        border.color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
+                        border.width: 1
+
                         Text {
                             anchors.centerIn: parent
-                            text: "⚙️ 设置绝对高度 (米)"
-                            font.pixelSize: 16
+                            text: "[ 设置绝对高度 ]"
+                            font.pixelSize: 14
                             font.bold: true
+                            font.family: "Monospace"
                             color: primaryColor
+
+                            // 文字发光
+                            style: Text.Normal
+                            styleColor: primaryColor
                         }
                     }
-                    
+
                     // 内容区域
                     Item {
                         width: parent.width
                         height: parent.height - 45 - 55
-                        
+
                         Column {
                             anchors.centerIn: parent
                             spacing: 15
-                            
+
                             Text {
                                 text: "已选择 " + heightSelectedDrones.length + " 架飞机"
-                                font.pixelSize: 14
-                                color: "#88c0d0"
+                                font.pixelSize: 12
+                                font.family: "Monospace"
+                                color: primaryColor
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
-                            
+
                             Row {
                                 spacing: 15
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                
+
                                 Text {
                                     text: "绝对高度:"
-                                    font.pixelSize: 14
-                                    color: "#d8dee9"
+                                    font.pixelSize: 13
+                                    font.family: "Monospace"
+                                    color: textColor
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
-                                
+
                                 TextField {
                                     id: heightInput
                                     width: 100
                                     height: 32
                                     text: "10"
                                     horizontalAlignment: Text.AlignHCenter
-                                    font.pixelSize: 14
+                                    font.pixelSize: 13
+                                    font.family: "Monospace"
+                                    font.bold: true
                                     validator: DoubleValidator { bottom: -100; top: 500; decimals: 1 }
-                                    color: "#eceff4"
+                                    color: textColor
                                     background: Rectangle {
-                                        color: "#3b4252"
-                                        border.color: heightInput.activeFocus ? primaryColor : "#4c566a"
-                                        border.width: heightInput.activeFocus ? 2 : 1
-                                        radius: 6
+                                        color: "#252A3A"
+                                        border.color: heightInput.activeFocus ? primaryColor : Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.5)
+                                        border.width: 1
+                                        radius: 0
                                     }
                                 }
-                                
+
                                 Text {
                                     text: "米"
-                                    font.pixelSize: 14
-                                    color: "#d8dee9"
+                                    font.pixelSize: 13
+                                    font.family: "Monospace"
+                                    color: textColor
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
                         }
                     }
-                    
+
                     // 按钮区域
                     Item {
                         width: parent.width
                         height: 55
-                        
+
                         Row {
                             anchors.centerIn: parent
                             spacing: 20
-                            
+
                             Button {
                                 width: 90
                                 height: 34
                                 text: "确定"
                                 background: Rectangle {
-                                    color: parent.pressed ? Qt.darker(secondaryColor, 1.2) : 
-                                           parent.hovered ? Qt.lighter(secondaryColor, 1.1) : secondaryColor
-                                    radius: 6
+                                    color: parent.pressed ? Qt.lighter(secondaryColor, 1.3) :
+                                           parent.hovered ? Qt.rgba(secondaryColor.r, secondaryColor.g, secondaryColor.b, 0.3) : "transparent"
+                                    radius: 0
+                                    border.color: secondaryColor
+                                    border.width: 1
                                 }
                                 contentItem: Text {
                                     text: parent.text
-                                    font.pixelSize: 14
-                                    color: "#2e3440"
+                                    font.pixelSize: 12
+                                    font.family: "Monospace"
+                                    font.bold: true
+                                    color: secondaryColor
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
@@ -5639,20 +5743,24 @@ Window {
                                     setHeightDialog.close();
                                 }
                             }
-                            
+
                             Button {
                                 width: 90
                                 height: 34
                                 text: "取消"
                                 background: Rectangle {
-                                    color: parent.pressed ? Qt.darker("#4c566a", 1.2) : 
-                                           parent.hovered ? Qt.lighter("#4c566a", 1.1) : "#4c566a"
-                                    radius: 6
+                                    color: parent.pressed ? Qt.lighter(dangerColor, 1.3) :
+                                           parent.hovered ? Qt.rgba(dangerColor.r, dangerColor.g, dangerColor.b, 0.3) : "transparent"
+                                    radius: 0
+                                    border.color: dangerColor
+                                    border.width: 1
                                 }
                                 contentItem: Text {
                                     text: parent.text
-                                    font.pixelSize: 14
-                                    color: "#d8dee9"
+                                    font.pixelSize: 12
+                                    font.family: "Monospace"
+                                    font.bold: true
+                                    color: dangerColor
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
@@ -5675,10 +5783,9 @@ Window {
                     bottom: parent.bottom
                 }
                 width: parent.width * 4 / 5 - 6
-                color: root.panelColor
-                radius: 8
-                border.color: "#4c566a"
-                border.width: 1
+                color: "#1E293B"  // 深灰蓝
+                radius: 0
+                border.width: 0  // 去掉边框
                 clip: true
 
                 // 可滚动的飞机区域
@@ -5698,7 +5805,7 @@ Window {
                     Row {
                         id: droneHeightContent
                         spacing: 0
-                        height: droneStatusFlickable.height > 0 ? droneStatusFlickable.height : 130
+                        height: droneStatusFlickable.height > 0 ? droneStatusFlickable.height : 280
 
                         // 动态生成各组
                         Repeater {
@@ -5727,88 +5834,110 @@ Window {
                                 }
 
                                 visible: droneCount > 0
-                                width: visible ? (30 + droneCount * 40 + 10 + (index > 0 ? 3 : 0)) : 0
+                                width: visible ? (30 + droneCount * 40 + 10 + (groupId > 1 ? 8 : 0)) : 0
                                 height: droneHeightContent.height > 0 ? droneHeightContent.height : 130
 
                                 Row {
                                     anchors.fill: parent
                                     spacing: 0
 
-                                    // 组分隔线
-                                    Rectangle {
-                                        visible: index > 0 && groupHeightItem.visible
-                                        width: 3
+                                    // 组分隔线 - 使用Text元素（和加号一样的方式）
+                                    Item {
+                                        visible: groupHeightItem.groupId > 1 && groupHeightItem.visible
+                                        width: 8
                                         height: parent.height
-                                        color: "#5e81ac"
+
+                                        Repeater {
+                                            model: Math.ceil(parent.height / 20)
+                                            Text {
+                                                x: 0
+                                                y: index * 20
+                                                text: "|"
+                                                font.pixelSize: 20
+                                                font.bold: true
+                                                color: "#FFFFFF"
+                                            }
+                                        }
                                     }
 
                                     Column {
-                                        width: parent.width - (index > 0 ? 3 : 0)
+                                        width: parent.width - (groupHeightItem.groupId > 1 ? 8 : 0)
                                         height: parent.height
 
-                                        // 组标题和设置高度按钮
-                                        Row {
+                                        // 组标题和设置高度按钮 - 优化布局
+                                        Column {
                                             width: parent.width
-                                            height: 22
-                                            spacing: 5
+                                            spacing: 2
 
+                                            // 第一行：组号
                                             Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: "第" + groupId + "组"
+                                                text: "G" + groupId
                                                 font.pixelSize: 10
                                                 font.bold: true
-                                                color: groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4))
+                                                font.family: "Monospace"
+                                                color: groupId === 1 ? "#00E5FF" : (groupId === 2 ? "#00FF88" : (groupId === 3 ? "#FF8C00" : "#FFD700"))  // 第三组改为橙色
+                                                anchors.horizontalCenter: parent.horizontalCenter
                                             }
 
-                                            Rectangle {
-                                                width: 50
-                                                height: 16
-                                                radius: 3
-                                                color: heightSelectedDrones.length > 0 ? "#5e81ac" : "#4c566a"
-                                                anchors.verticalCenter: parent.verticalCenter
+                                            // 第二行：设置高度按钮和主机高度
+                                            Row {
+                                                width: parent.width
+                                                spacing: 3
 
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: "设置高度"
-                                                    font.pixelSize: 8
-                                                    color: "white"
-                                                }
+                                                Rectangle {
+                                                    width: 40
+                                                    height: 14
+                                                    radius: 0
+                                                    color: heightSelectedDrones.length > 0 ? Qt.rgba(primaryColor.r, primaryColor.g, primaryColor.b, 0.2) : "transparent"
+                                                    border.color: heightSelectedDrones.length > 0 ? primaryColor : Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
+                                                    border.width: 1
 
-                                                MouseArea {
-                                                    anchors.fill: parent
-                                                    onClicked: {
-                                                        var selected = [];
-                                                        for (var i = 0; i < heightSelectedDrones.length; i++) {
-                                                            if (heightSelectedDrones[i].group_id === groupId) {
-                                                                selected.push(heightSelectedDrones[i]);
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: "SET"
+                                                        font.pixelSize: 6
+                                                        font.family: "Monospace"
+                                                        font.bold: true
+                                                        color: heightSelectedDrones.length > 0 ? primaryColor : Qt.rgba(textColor.r, textColor.g, textColor.b, 0.5)
+                                                    }
+
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        onClicked: {
+                                                            var selected = [];
+                                                            for (var i = 0; i < heightSelectedDrones.length; i++) {
+                                                                if (heightSelectedDrones[i].group_id === groupId) {
+                                                                    selected.push(heightSelectedDrones[i]);
+                                                                }
                                                             }
-                                                        }
-                                                        if (selected.length > 0) {
-                                                            heightSelectedDrones = selected;
-                                                            setHeightDialog.targetGroupId = groupId;
-                                                            setHeightDialog.open();
-                                                        } else {
-                                                            console.log("请先右键选择本组的飞机");
+                                                            if (selected.length > 0) {
+                                                                heightSelectedDrones = selected;
+                                                                setHeightDialog.targetGroupId = groupId;
+                                                                setHeightDialog.open();
+                                                            } else {
+                                                                console.log("请先右键选择本组的飞机");
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
 
-                                            Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: "主机:" + mainHeight.toFixed(1) + "m"
-                                                font.pixelSize: 8
-                                                color: "#a0a0a0"
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: mainHeight.toFixed(1) + "m"
+                                                    font.pixelSize: 7
+                                                    font.family: "Monospace"
+                                                    color: Qt.rgba(textColor.r, textColor.g, textColor.b, 0.6)
+                                                }
                                             }
                                         }
 
                                         // 刻度尺和飞机区域
                                         Row {
                                             width: parent.width
-                                            height: parent.height - 22
+                                            height: parent.height - 32  // 调整为32，因为标题区域变高了
                                             spacing: 0
 
-                                            // 刻度尺
+                                            // 刻度尺 - FUI风格
                                             Rectangle {
                                                 id: scaleArea
                                                 width: 30
@@ -5823,7 +5952,7 @@ Window {
                                                         // 计算刻度间隔，太密集时只显示部分刻度
                                                         property int scaleStep: scaleRange > 20 ? 5 : (scaleRange > 10 ? 2 : 1)
                                                         property bool showLabel: (Math.abs(scaleValue) % scaleStep === 0) || scaleValue === 0
-                                                        
+
                                                         x: 0
                                                         y: yPos + 5
                                                         width: 30
@@ -5833,7 +5962,7 @@ Window {
                                                             anchors.right: parent.right
                                                             width: showLabel ? 8 : 4
                                                             height: 1
-                                                            color: scaleValue === 0 ? "#bf616a" : "#4c566a"
+                                                            color: scaleValue === 0 ? dangerColor : Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
                                                         }
 
                                                         Text {
@@ -5842,8 +5971,9 @@ Window {
                                                             anchors.rightMargin: 10
                                                             anchors.verticalCenter: parent.verticalCenter
                                                             text: scaleValue.toFixed(0)
-                                                            font.pixelSize: 8
-                                                            color: scaleValue === 0 ? "#bf616a" : "#a0a0a0"
+                                                            font.pixelSize: 7
+                                                            font.family: "Monospace"
+                                                            color: scaleValue === 0 ? dangerColor : Qt.rgba(textColor.r, textColor.g, textColor.b, 0.6)
                                                         }
                                                     }
                                                 }
@@ -5853,7 +5983,7 @@ Window {
                                                     y: ((scaleMax - 0) / scaleRange) * (parent.height - 10) + 5
                                                     width: parent.width
                                                     height: 1
-                                                    color: "#bf616a"
+                                                    color: dangerColor
                                                     opacity: 0.5
                                                 }
                                             }
@@ -5874,14 +6004,14 @@ Window {
                                                         property real droneRelHeight: droneAbsHeight - mainHeight
                                                         property bool isSelected: heightSelectedDrones.indexOf(droneNode) >= 0
                                                         property bool isDragging: false
-                                                        
+
                                                         width: 38
                                                         height: parent.height
 
                                                         Rectangle {
                                                             anchors.fill: parent
                                                             color: "transparent"
-                                                            border.color: "#3b4252"
+                                                            border.color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.2)
                                                             border.width: 1
 
                                                             Rectangle {
@@ -5889,7 +6019,7 @@ Window {
                                                                 y: ((scaleMax - 0) / scaleRange) * (parent.height - 10) + 5
                                                                 width: parent.width
                                                                 height: 1
-                                                                color: "#bf616a"
+                                                                color: dangerColor
                                                                 opacity: 0.3
                                                             }
 
@@ -5897,24 +6027,45 @@ Window {
                                                                 id: droneIcon
                                                                 width: 34
                                                                 height: 20
-                                                                radius: 3
+                                                                radius: 0
                                                                 x: 2
                                                                 y: Math.max(0, Math.min(parent.height - height - 5, ((scaleMax - droneRelHeight) / scaleRange) * (parent.height - 10) + 5 - height/2))
-                                                                
-                                                                color: isSelected ? Qt.darker(droneNode && (droneNode.is_main || droneNode.set_main) ? "#bf616a" : 
-                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4))), 1.3) :
-                                                                    (droneNode && (droneNode.is_main || droneNode.set_main) ? "#bf616a" : 
-                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4))))
-                                                                
-                                                                border.color: isSelected ? "white" : "transparent"
-                                                                border.width: isSelected ? 2 : 0
+
+                                                                color: isSelected ? Qt.rgba((droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))).r,
+                                                                    (droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))).g,
+                                                                    (droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))).b, 0.5) :
+                                                                    Qt.rgba((droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))).r,
+                                                                    (droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))).g,
+                                                                    (droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))).b, 0.3)
+
+                                                                border.color: droneNode && (droneNode.is_main || droneNode.set_main) ? dangerColor :
+                                                                    (groupId === 1 ? modelColor1 : (groupId === 2 ? modelColor2 : (groupId === 3 ? modelColor3 : modelColor4)))
+                                                                border.width: isSelected ? 2 : 1
+
+                                                                // 发光效果
+                                                                Rectangle {
+                                                                    anchors.fill: parent
+                                                                    anchors.margins: -2
+                                                                    color: "transparent"
+                                                                    border.color: parent.border.color
+                                                                    border.width: 1
+                                                                    radius: 0
+                                                                    opacity: isSelected ? 0.6 : 0.3
+                                                                }
 
                                                                 Text {
                                                                     anchors.centerIn: parent
                                                                     text: droneNode ? droneNode.objectName : ""
                                                                     font.pixelSize: 8
                                                                     font.bold: true
-                                                                    color: "white"
+                                                                    font.family: "Monospace"
+                                                                    color: "#FFFFFF"  // 明确的纯白色
                                                                 }
 
                                                                 Text {
@@ -5922,8 +6073,69 @@ Window {
                                                                     anchors.topMargin: 1
                                                                     anchors.horizontalCenter: parent.horizontalCenter
                                                                     text: droneAbsHeight.toFixed(1) + "m"
-                                                                    font.pixelSize: 7
-                                                                    color: "#a0a0a0"
+                                                                    font.pixelSize: 9
+                                                                    font.family: "Monospace"
+                                                                    color: "#A0A0A0"  // 明确的灰色
+                                                                }
+
+                                                                // 电池电量显示
+                                                                Text {
+                                                                    id: batteryText
+                                                                    anchors.top: parent.bottom
+                                                                    anchors.topMargin: 12
+                                                                    anchors.horizontalCenter: parent.horizontalCenter
+
+                                                                    property var currentVehicle: {
+                                                                        if (!droneNode || !droneNode.is_connected) return null;
+                                                                        var vehicleId = parseInt(droneNode.objectName);
+                                                                        if (QGroundControl.multiVehicleManager.my_vehicles) {
+                                                                            return QGroundControl.multiVehicleManager.my_vehicles[vehicleId];
+                                                                        }
+                                                                        var vehicles = QGroundControl.multiVehicleManager.vehicles;
+                                                                        for (var i = 0; i < vehicles.count; i++) {
+                                                                            var v = vehicles.get(i);
+                                                                            if (v && v.id === vehicleId) return v;
+                                                                        }
+                                                                        return null;
+                                                                    }
+                                                                    property real batteryPercent: {
+                                                                        if (!currentVehicle) return -1;
+                                                                        if (currentVehicle.battery && currentVehicle.battery.percentRemaining) {
+                                                                            var val = currentVehicle.battery.percentRemaining.value;
+                                                                            if (val !== undefined && val >= 0) return val;
+                                                                        }
+                                                                        if (currentVehicle.batteries && currentVehicle.batteries.count > 0) {
+                                                                            var battery = currentVehicle.batteries.get(0);
+                                                                            if (battery && battery.percentRemaining) {
+                                                                                var val2 = battery.percentRemaining.value;
+                                                                                if (val2 !== undefined && val2 >= 0) return val2;
+                                                                            }
+                                                                        }
+                                                                        return -1;
+                                                                    }
+
+                                                                    text: batteryPercent >= 0 ? batteryPercent.toFixed(0) + "%" : (droneNode && droneNode.is_connected ? "N/A" : "--")
+                                                                    font.pixelSize: 10
+                                                                    font.family: "Monospace"
+                                                                    font.bold: true
+                                                                    color: {
+                                                                        if (batteryPercent >= 0) {
+                                                                            if (batteryPercent > 50) return "#00FF88";
+                                                                            else if (batteryPercent > 20) return "#FFD700";
+                                                                            else return "#FF3366";
+                                                                        }
+                                                                        return "#A0A0A0";
+                                                                    }
+
+                                                                    // 定时刷新电池数据
+                                                                    Timer {
+                                                                        interval: 1000
+                                                                        running: droneNode && droneNode.is_connected
+                                                                        repeat: true
+                                                                        onTriggered: {
+                                                                            batteryText.currentVehicle = batteryText.currentVehicle;
+                                                                        }
+                                                                    }
                                                                 }
 
                                                                 MouseArea {
@@ -5959,19 +6171,19 @@ Window {
                                                                             var newY = droneIcon.y;
                                                                             var newRelH = scaleMax - ((newY + droneIcon.height/2 - 5) / (droneColumn.height - 10)) * scaleRange;
                                                                             newRelH = Math.round(newRelH * 10) / 10;
-                                                                            
+
                                                                             // 计算新的绝对高度
                                                                             var newAbsH = mainHeight + newRelH;
-                                                                            
+
                                                                             // 存储绝对高度
                                                                             setDroneAbsoluteHeight(droneNode.objectName, newAbsH, groupId);
                                                                             droneNode.model_z = newRelH;
-                                                                            
+
                                                                             // 发送绝对高度给飞机
                                                                             if (droneNode.is_connected) {
                                                                                 swarm_send.set_absolute_altitude(droneNode.objectName, newAbsH);
                                                                             }
-                                                                            
+
                                                                             console.log("拖动设置飞机", droneNode.objectName, "绝对高度为", newAbsH, "米, 相对高度", newRelH, "米");
                                                                             updateGroupScale(groupId);
                                                                         }
@@ -6004,7 +6216,7 @@ Window {
                                     function onGroup3CountChanged() { if (groupId === 3) groupHeightItem.updateGroupDrones(); }
                                     function onGroup4CountChanged() { if (groupId === 4) groupHeightItem.updateGroupDrones(); }
                                     function onPlanArrChanged() { groupHeightItem.updateGroupDrones(); }
-                                    function onGroupMainHeightChanged() { 
+                                    function onGroupMainHeightChanged() {
                                         groupHeightItem.mainHeight = groupMainHeight[groupId.toString()] || 0;
                                         groupHeightItem.updateGroupDrones();
                                     }
@@ -6044,7 +6256,7 @@ Window {
                 }
             }
 
-            // 右侧：交互消息区域 (占1/5)
+            // 右侧：交互消息区域 (占1/5) - 无边框卡片
             Rectangle {
                 id: messageArea
                 anchors {
@@ -6053,12 +6265,11 @@ Window {
                     bottom: parent.bottom
                 }
                 width: parent.width * 1 / 5 - 6
-                color: root.panelColor
-                radius: 8
-                border.color: "#4c566a"
-                border.width: 1
+                color: "#1E293B"  // 深灰蓝
+                radius: 0
+                border.width: 0  // 去掉边框
 
-                // 标题
+                // 标题 - 数字读数风格
                 Rectangle {
                     id: messageHeader
                     anchors {
@@ -6067,26 +6278,17 @@ Window {
                         top: parent.top
                     }
                     height: 25
-                    color: "#3b4252"
-                    radius: 8
-
-                    // 底部圆角遮挡
-                    Rectangle {
-                        anchors {
-                            left: parent.left
-                            right: parent.right
-                            bottom: parent.bottom
-                        }
-                        height: 8
-                        color: parent.color
-                    }
+                    color: "#252A3A"
+                    radius: 0
+                    border.width: 0
 
                     Text {
                         anchors.centerIn: parent
-                        text: "交互消息"
-                        font.pixelSize: 12
+                        text: "[ SYSTEM LOG ]"
+                        font.pixelSize: 10
                         font.bold: true
-                        color: "#88c0d0"
+                        font.family: "Monospace"
+                        color: textColorDim  // 暗灰色标签
                     }
                 }
 
@@ -6113,8 +6315,11 @@ Window {
                         delegate: Rectangle {
                             width: messageListView.width
                             height: msgText.implicitHeight + 6
-                            color: index % 2 === 0 ? "#2e3440" : "#3b4252"
-                            radius: 4
+                            color: "transparent"
+                            border.color: index % 2 === 0 ? "transparent" : root.borderColor
+                            border.width: index % 2 === 0 ? 0 : 1
+                            radius: 0
+                            opacity: index % 2 === 0 ? 0.7 : 0.9
 
                             Text {
                                 id: msgText
@@ -6124,11 +6329,10 @@ Window {
                                     verticalCenter: parent.verticalCenter
                                     margins: 5
                                 }
-                                text: model.message
-                                font.pixelSize: 10
-                                color: model.msgType === "error" ? "#bf616a" :
-                                       model.msgType === "warning" ? "#ebcb8b" :
-                                       model.msgType === "success" ? "#a3be8c" : "#d8dee9"
+                                text: "> " + model.message
+                                font.pixelSize: 9
+                                font.family: "Monospace"
+                                color: "#00FF88"  // 统一使用电光绿
                                 wrapMode: Text.WordWrap
                             }
                         }
@@ -6145,65 +6349,112 @@ Window {
                 // 无消息时的提示
                 Text {
                     anchors.centerIn: parent
-                    text: "暂无消息"
-                    font.pixelSize: 12
-                    color: "#4c566a"
+                    text: "[ NO DATA ]"
+                    font.pixelSize: 11
+                    font.family: "Monospace"
+                    color: root.borderColor
+                    opacity: 0.5
                     visible: messageListModel.count === 0
                 }
             }
         }
 
-        // 底部状态栏
+        // 底部状态栏 - 无边框卡片风格
         Rectangle {
             id: bottomBar
             width: parent.width
             height: 40
             anchors.bottom: parent.bottom
-            color: root.panelColor
-            radius: 8
+            color: "#1E293B"  // 深灰蓝
+            radius: 0
+            border.width: 0  // 去掉边框
+
+            // 顶部分隔线（极细）
+            Rectangle {
+                anchors.top: parent.top
+                width: parent.width
+                height: 1
+                color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.2)
+            }
 
             RowLayout {
                 anchors.fill: parent
                 anchors.margins: 10
 
                 Label {
-                    text: "就绪"
+                    text: "[ SYSTEM READY ]"
                     color: root.secondaryColor
-                    font.pixelSize: 14
+                    font.pixelSize: 12
+                    font.family: "Monospace"
+                    font.bold: true
                 }
 
                 Item { Layout.fillWidth: true }
 
+                // 时间显示
+                Label {
+                    text: Qt.formatDateTime(new Date(), "hh:mm:ss")
+                    color: root.textColor
+                    font.pixelSize: 11
+                    font.family: "Monospace"
+                    opacity: 0.7
+
+                    Timer {
+                        interval: 1000
+                        running: true
+                        repeat: true
+                        onTriggered: parent.text = Qt.formatDateTime(new Date(), "hh:mm:ss")
+                    }
+                }
             }
         }
     }
 
     // ========== 自定义控件 ==========
 
-    // 自定义按钮
+    // 自定义按钮 - 商业级FUI风格（实心填充+发光）
     component CustomButton : Button {
         property color color: primaryColor
+        property bool isPrimary: false  // 是否为主要操作（起飞/降落）
         width: 80
         height: 36
         contentItem: Text {
             text: parent.text
-            color: textColor
+            color: parent.isPrimary ? "#000000" : parent.color
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 14
+            font.pixelSize: 12
             font.bold: true
+            font.family: "Sans Serif"
         }
         background: Rectangle {
-            color: parent.down ? Qt.darker(parent.color, 1.2) :
-                   parent.hovered ? Qt.lighter(parent.color, 1.2) : parent.color
-            radius: 6
-            border.width: 1
-            border.color: Qt.lighter(parent.color, 1.5)
+            // 主操作：实心填充，次操作：半透明背景
+            color: parent.isPrimary ?
+                (parent.down ? Qt.lighter(parent.color, 1.2) : parent.color) :
+                (parent.down ? Qt.rgba(parent.color.r, parent.color.g, parent.color.b, 0.3) :
+                 parent.hovered ? Qt.rgba(parent.color.r, parent.color.g, parent.color.b, 0.2) :
+                 Qt.rgba(parent.color.r, parent.color.g, parent.color.b, 0.1))
+            radius: 0
+            border.width: parent.isPrimary ? 0 : 1
+            border.color: parent.color
+
+            // 发光效果（主操作更强）
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -2
+                color: "transparent"
+                border.color: parent.parent.color
+                border.width: 1
+                radius: 0
+                opacity: parent.parent.isPrimary ? (parent.parent.hovered ? 0.8 : 0.5) :
+                        (parent.parent.hovered ? 0.4 : 0)
+                visible: parent.parent.isPrimary || parent.parent.hovered
+            }
         }
     }
     component RadiusButton : Button {
         id: roundButton
-        property color color: "#4CAF50" // 临时用具体颜色测试
+        property color color: "#00E5FF"
         width: 20
         height: 20
 
@@ -6218,29 +6469,56 @@ Window {
         background: Rectangle {
             width: 20
             height: 20
-            radius: 10  // 固定半径为10，确保完美圆形
-            color: roundButton.down ? Qt.darker(roundButton.color, 1.2) :
-                   roundButton.hovered ? Qt.lighter(roundButton.color, 1.2) : roundButton.color
-            border.width: 1
-            border.color: Qt.lighter(roundButton.color, 1.5)
+            radius: 10
+            color: roundButton.down ? Qt.lighter(roundButton.color, 1.3) :
+                   Qt.rgba(roundButton.color.r, roundButton.color.g, roundButton.color.b, 0.3)
+            border.width: 2
+            border.color: roundButton.color
+
+            // 发光效果
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -2
+                radius: 12
+                color: "transparent"
+                border.color: parent.border.color
+                border.width: 1
+                opacity: 0.5
+            }
         }
     }
 
-    // 自定义文本框
+    // 自定义文本框 - 无边框数字读数风格
     component CustomTextField : TextField {
         id: textField
         height: 36
         color: textColor
-        font.pixelSize: 14
+        font.pixelSize: 13
+        font.family: "Monospace"
+        font.bold: true
         selectionColor: primaryColor
-        selectedTextColor: textColor
-        placeholderTextColor: "#7f8c8d"
+        selectedTextColor: "#000000"
+        placeholderTextColor: Qt.rgba(textColor.r, textColor.g, textColor.b, 0.3)
+        horizontalAlignment: Text.AlignHCenter
 
         background: Rectangle {
-            color: controlColor
-            radius: 6
-            border.color: textField.activeFocus ? primaryColor : "#4c566a"
+            color: textField.activeFocus ? Qt.rgba(primaryColor.r, primaryColor.g, primaryColor.b, 0.1) : "transparent"
+            radius: 0
+            border.color: textField.activeFocus ? primaryColor : Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
             border.width: 1
+
+            // 底部发光线
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: 2
+                color: primaryColor
+                opacity: textField.activeFocus ? 0.8 : 0
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 200 }
+                }
+            }
         }
 
         // 输入验证
@@ -6585,7 +6863,7 @@ Window {
         var newHeights = JSON.parse(JSON.stringify(droneAbsoluteHeight));
         newHeights[objectName] = height;
         droneAbsoluteHeight = newHeights;
-        
+
         // 标记该组已手动设置过高度
         var newManual = JSON.parse(JSON.stringify(groupHeightManuallySet));
         newManual[groupId.toString()] = true;
@@ -6604,7 +6882,7 @@ Window {
         var maxH = 5;
         var minH = -5;
         var mainH = groupMainHeight[groupId.toString()] || 0;
-        
+
         for (var i = 0; i < plan_arr.length; i++) {
             if (plan_arr[i].group_id === groupId && plan_arr[i].visible) {
                 var absH = getDroneAbsoluteHeight(plan_arr[i].objectName, groupId);
@@ -6613,7 +6891,7 @@ Window {
                 if (relH < minH) minH = Math.floor(relH) - 1;
             }
         }
-        
+
         var newMax = JSON.parse(JSON.stringify(groupScaleMax));
         var newMin = JSON.parse(JSON.stringify(groupScaleMin));
         newMax[groupId.toString()] = maxH;
@@ -6627,7 +6905,7 @@ Window {
         var newMainH = JSON.parse(JSON.stringify(groupMainHeight));
         newMainH[groupId.toString()] = height;
         groupMainHeight = newMainH;
-        
+
         // 如果该组没有手动设置过高度，则给所有从机设置相同的绝对高度
         if (!groupHeightManuallySet[groupId.toString()]) {
             for (var i = 0; i < plan_arr.length; i++) {
@@ -6635,7 +6913,7 @@ Window {
                     var newHeights = JSON.parse(JSON.stringify(droneAbsoluteHeight));
                     newHeights[plan_arr[i].objectName] = height;
                     droneAbsoluteHeight = newHeights;
-                    
+
                     // 发送绝对高度给飞机
                     if (plan_arr[i].is_connected) {
                         swarm_send.set_absolute_altitude(plan_arr[i].objectName, height);
@@ -6643,7 +6921,7 @@ Window {
                 }
             }
         }
-        
+
         updateGroupScale(groupId);
         console.log("设置第" + groupId + "组主机高度为: " + height + "米");
     }
@@ -7717,10 +7995,10 @@ Window {
     // 返回 {x: 起始X, y: 起始Y, areaWidth: 区域宽度, areaHeight: 区域高度}
     function getFormationAreaCenter(groupId, formationWidth, formationHeight) {
         var areaLeft = 0, areaRight = 0, areaTop = 0, areaBottom = 0;
-        
+
         // 获取该组对应的位置
         var pos = grp_pos_mp[groupId] || 0;
-        
+
         // 如果只有一个组或者找不到位置映射，使用整个区域
         if (group_num === 1 || pos === 0) {
             areaLeft = 0;
@@ -7782,23 +8060,23 @@ Window {
                 areaBottom = Math.floor(control.height / 40) - 1;
             }
         }
-        
+
         var areaWidth = areaRight - areaLeft + 1;
         var areaHeight = areaBottom - areaTop + 1;
-        
+
         // 计算居中的起始位置
         var startX = areaLeft + Math.floor((areaWidth - formationWidth) / 2);
         var startY = areaTop + Math.floor((areaHeight - formationHeight) / 2);
-        
+
         // 确保起始位置不小于区域左上角
         if (startX < areaLeft) startX = areaLeft;
         if (startY < areaTop) startY = areaTop;
-        
+
         console.log("getFormationAreaCenter: groupId=", groupId, "pos=", pos, "group_num=", group_num);
         console.log("区域: left=", areaLeft, "right=", areaRight, "top=", areaTop, "bottom=", areaBottom);
         console.log("队形尺寸: width=", formationWidth, "height=", formationHeight);
         console.log("居中起始位置: startX=", startX, "startY=", startY);
-        
+
         return {x: startX, y: startY, areaWidth: areaWidth, areaHeight: areaHeight};
     }
 
@@ -8024,9 +8302,12 @@ Window {
 
         var n = form_arr.length;
 
-        var radius = n / 2; // 半径不能太小
-        if(radius < 2) radius = 2
-        if(radius >= 8) radius = 8
+        // 调整半径计算，使圆形编队的间距与正方形编队一致
+        // 圆周长 = 2πr，飞机数量 = n，间距应为 1（与正方形一致）
+        // 因此 r = n / (2π)
+        var radius = n / (2 * Math.PI);
+        if(radius < 1) radius = 1      // 最小半径
+        if(radius >= 4) radius = 4     // 最大半径限制
 
         // 圆形的直径（队形尺寸）
         var diameter = Math.ceil(radius * 2) + 1;
@@ -8039,12 +8320,16 @@ Window {
         var angleStep = 2 * Math.PI / n; // 每个点之间的角度差
         var index = 0
 
+        // 圆心位置
+        var centerX = x_1 + radius;
+        var centerY = y_1 + radius;
+
         for (i = 0; i < n; ++i) {
             var angle = i * angleStep;
-            var x = radius + radius * Math.cos(angle);
-            var y = radius + radius * Math.sin(angle);
+            var x = centerX + radius * Math.cos(angle);
+            var y = centerY + radius * Math.sin(angle);
             if(index >= n) break
-            screen_pos_to_world_pos(x_1 + x,y_1 + y,form_arr[index++])
+            screen_pos_to_world_pos(x, y, form_arr[index++])
         }
 
         send_all_airplane_pos(input4.text,0)

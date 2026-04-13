@@ -50,6 +50,7 @@
 #include "LogDownloadController.h"
 #include "MAVLinkChartController.h"
 #include "MAVLinkConsoleController.h"
+#include "PX4CANTestController.h"
 #include "MAVLinkProtocol.h"
 #include "MissionManager.h"
 #include "MultiVehicleManager.h"
@@ -302,6 +303,7 @@ void QGCApplication::init()
     qmlRegisterType<GeoTagController>("QGroundControl.Controllers", 1, 0, "GeoTagController");
     qmlRegisterType<LogDownloadController>("QGroundControl.Controllers", 1, 0, "LogDownloadController");
     qmlRegisterType<MAVLinkConsoleController>("QGroundControl.Controllers", 1, 0, "MAVLinkConsoleController");
+    qmlRegisterType<PX4CANTestController>("QGroundControl.Controllers", 1, 0, "PX4CANTestController");
 
 
     qmlRegisterUncreatableType<AutoPilotPlugin>("QGroundControl.AutoPilotPlugin", 1, 0, "AutoPilotPlugin", "Reference only");
@@ -328,7 +330,7 @@ void QGCApplication::init()
 
    // qmlRegisterType<swarm>("QGroundControl.Controllers", 1, 0, "swarm");
 
-    
+
     // Although this should really be in _initForNormalAppBoot putting it here allowws us to create unit tests which pop up more easily
     if(QFontDatabase::addApplicationFont(":/fonts/opensans") < 0) {
         qCWarning(QGCApplicationLog) << "Could not load /fonts/opensans font";

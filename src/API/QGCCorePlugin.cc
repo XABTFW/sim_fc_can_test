@@ -102,6 +102,10 @@ const QVariantList &QGCCorePlugin::analyzePages()
             tr("Vibration"),
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/VibrationPage.qml")),
             QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/VibrationPageIcon")))),
+        QVariant::fromValue(new QmlComponentInfo(
+            tr("PX4 CAN Test"),
+            QUrl::fromUserInput(QStringLiteral("qrc:/qml/PX4CANTestPage.qml")),
+            QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/PX4CANTestIcon.svg")))),
 
          // ✅ 添加你自己的页面
         QVariant::fromValue(new QmlComponentInfo(

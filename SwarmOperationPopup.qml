@@ -62,7 +62,7 @@ Rectangle {
                 text: opType === 3 ? "⚙" : (opType === 4 ? "✈" : (isSuccess ? "✓" : "✗"))
                 font.pixelSize: 24
                 font.bold: true
-                color: "white"
+                color: "#FFFFFF"
             }
         }
 
@@ -75,13 +75,13 @@ Rectangle {
                 text: opType === 3 ? "参数变更" : (opType === 4 ? "从机状态" : (isSuccess ? "操作成功" : "操作失败"))
                 font.pixelSize: 14
                 font.bold: true
-                color: "white"
+                color: "#00FF88"  // 统一使用电光绿
             }
 
             Text {
                 text: message
                 font.pixelSize: 12
-                color: "#e0e0e0"
+                color: "#00FF88"  // 统一使用电光绿
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
@@ -98,7 +98,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: "×"
                 font.pixelSize: 18
-                color: "#e0e0e0"
+                color: "#E0E0E0"
             }
 
             MouseArea {
@@ -135,6 +135,12 @@ Rectangle {
 
     // 显示弹窗
     function showPopup(sysId, opType, result, oldValue, newValue, msg) {
+        // 过滤空消息
+        if (!msg || msg.toString().trim() === "") {
+            console.log("[SwarmOperationPopup] 忽略空消息");
+            return;
+        }
+
         // 添加到队列
         messageQueue.push({
             sysId: sysId,

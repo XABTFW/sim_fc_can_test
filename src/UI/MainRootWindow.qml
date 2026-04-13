@@ -819,6 +819,23 @@ ApplicationWindow {
         onMessage:yilongdeswarmloader.item.show()
     }
 
+    // 定点打击窗口
+    Loader {
+        id: precisionStrikeLoader
+        source: "qrc:/qml/PrecisionStrike.qml"
+        asynchronous: false
+        onLoaded: {
+            console.log("定点打击窗口加载完成")
+        }
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.log("PrecisionStrike 加载错误")
+            }
+        }
+    }
+
+    property var precisionStrikeWindow: precisionStrikeLoader.item
+
     UTMSPActivationStatusBar{
          id:                         activationbar
          activationStartTimestamp:   UTMSPStateStorage.startTimeStamp

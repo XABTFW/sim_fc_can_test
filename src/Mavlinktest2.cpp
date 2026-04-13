@@ -4,6 +4,7 @@
 #include "MAVLinkInspectorController.h"
 #include "mavlink_msg_uav_info.h"
 #include "mavlink_msg_swarm_operation_ack.h"
+#include "mavlink_msg_swarm_mission_item.h"
 #include "MultiVehicleManager.h"
 #include <QtCharts/QLineSeries>
 #include<iostream>
@@ -64,8 +65,7 @@ Mavlinktest2::_setActiveVehicle(Vehicle* vehicle)
     _uas_connections.clear();
 
     _vehicle = vehicle;
-    if (vehicle)
-        qDebug()<<__FUNCTION__<<vehicle->id()<<_vehicle->parameterManager();
+    // 性能优化：移除调试日志
     if (_vehicle)
     {
         _incoming_buffer.clear();
@@ -140,29 +140,66 @@ Mavlinktest2::_receiveMessage(LinkInterface*, mavlink_message_t message)
 
         // 格式化消息文本
         QString msgText;
-        if (ack.result == 0) { // SUCCESS
-            if (ack.operation_type == 1) { // GROUP_CHANGE
-                msgText = QString("飞机%1: 组号从%2切换到%3 成功")
+        QString resultStr = (ack.result == 0) ? "成功" : "失败";
+
+        switch (ack.operation_type) {
+            case 1: // GROUP_CHANGE
+                if (ack.result == 0) {
+                    msgText = QString("飞机%1: 组号从%2切换到%3 成功")
+                              .arg(ack.target_system)
+                              .arg(ack.old_value)
+                              .arg(ack.new_value);
+                } else {
+                    msgText = QString("飞机%1: 组号切换失败").arg(ack.target_system);
+                }
+                break;
+            case 2: // LEADER_CHANGE
+                if (ack.result == 0) {
+                    QString oldRole = (ack.old_value == 1) ? "主机" : "从机";
+                    QString newRole = (ack.new_value == 1) ? "主机" : "从机";
+                    msgText = QString("飞机%1: 角色从%2切换到%3 成功")
+                              .arg(ack.target_system)
+                              .arg(oldRole)
+                              .arg(newRole);
+                } else {
+                    msgText = QString("飞机%1: 角色切换失败").arg(ack.target_system);
+                }
+                break;
+            case 3: // TAKEOFF
+                msgText = QString("飞机%1 (第%2组): 起飞%3")
                           .arg(ack.target_system)
-                          .arg(ack.old_value)
-                          .arg(ack.new_value);
-            } else if (ack.operation_type == 2) { // LEADER_CHANGE
-                QString oldRole = (ack.old_value == 1) ? "主机" : "从机";
-                QString newRole = (ack.new_value == 1) ? "主机" : "从机";
-                msgText = QString("飞机%1: 角色从%2切换到%3 成功")
+                          .arg(ack.new_value)
+                          .arg(resultStr);
+                break;
+            case 4: // LAND
+                msgText = QString("飞机%1 (第%2组): 降落%3")
                           .arg(ack.target_system)
-                          .arg(oldRole)
-                          .arg(newRole);
-            }
-        } else { // FAILED
-            if (ack.operation_type == 1) {
-                msgText = QString("飞机%1: 组号切换失败").arg(ack.target_system);
-            } else if (ack.operation_type == 2) {
-                msgText = QString("飞机%1: 角色切换失败").arg(ack.target_system);
-            }
+                          .arg(ack.new_value)
+                          .arg(resultStr);
+                break;
+            case 5: // PAUSE
+                msgText = QString("飞机%1 (第%2组): 暂停%3")
+                          .arg(ack.target_system)
+                          .arg(ack.new_value)
+                          .arg(resultStr);
+                break;
+            case 6: // CONTINUE
+                msgText = QString("飞机%1 (第%2组): 继续%3")
+                          .arg(ack.target_system)
+                          .arg(ack.new_value)
+                          .arg(resultStr);
+                break;
+            default:
+                msgText = QString("飞机%1: 未知操作类型%2")
+                          .arg(ack.target_system)
+                          .arg(ack.operation_type);
+                break;
         }
 
-        qDebug() << "[Mavlinktest2] 收到SWARM_OPERATION_ACK:" << msgText;
+        // 性能优化：移除调试日志，只在错误时输出
+        if (ack.result != 0) {
+            qDebug() << "[Mavlinktest2] 操作失败:" << msgText;
+        }
 
         // 发送信号通知QML
         emit swarmOperationAckReceived(
@@ -213,12 +250,76 @@ Mavlinktest2::_receiveMessage(LinkInterface*, mavlink_message_t message)
         }
 
     }
+
+    // ========== 转发 SWARM_MISSION_ITEM 消息给所有飞机 ==========
+    // 性能优化：移除调试日志，防止消息循环
+    if(message.msgid == MAVLINK_MSG_ID_SWARM_MISSION_ITEM)
+    {
+        mavlink_swarm_mission_item_t swarm_item;
+        mavlink_msg_swarm_mission_item_decode(&message, &swarm_item);
+
+        // 防止消息循环：检查消息是否来自地面站自己
+        if (message.sysid == MAVLinkProtocol::instance()->getSystemId()) {
+            // 这是地面站自己转发的消息，不再转发，避免循环
+            return;
+        }
+
+        // 获取所有连接的飞机
+        QMap<int, Vehicle*> vehicles = MultiVehicleManager::instance()->my_vehicles();
+
+        for (auto it = vehicles.begin(); it != vehicles.end(); ++it) {
+            Vehicle* vehicle = it.value();
+            if (!vehicle) continue;
+
+            // 不转发给发送者自己
+            if (vehicle->id() == swarm_item.leader_id) {
+                continue;
+            }
+
+            WeakLinkInterfacePtr weakLink = vehicle->vehicleLinkManager()->primaryLink();
+            if (weakLink.expired()) {
+                continue;
+            }
+
+            SharedLinkInterfacePtr sharedLink = weakLink.lock();
+            if (!sharedLink) {
+                continue;
+            }
+
+            mavlink_message_t msg;
+            mavlink_msg_swarm_mission_item_pack_chan(
+                static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+                static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+                sharedLink->mavlinkChannel(),
+                &msg,
+                swarm_item.timestamp,
+                swarm_item.group_id,
+                swarm_item.leader_id,
+                swarm_item.mission_id,
+                swarm_item.total_count,
+                swarm_item.current_seq,
+                swarm_item.seq,
+                swarm_item.nav_cmd,
+                swarm_item.lat,
+                swarm_item.lon,
+                swarm_item.alt,
+                swarm_item.yaw,
+                swarm_item.acceptance_radius,
+                swarm_item.loiter_radius,
+                swarm_item.time_inside,
+                swarm_item.autocontinue,
+                swarm_item.sync_type
+            );
+
+            vehicle->sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
+        }
+    }
 }
 
-void Mavlinktest2::set_main_airplane(int sysid, float x,float y,float z) { // 需要给飞控发送自定义消息 设置主机
+void Mavlinktest2::set_main_airplane(int sysid, float x,float y,float z) {
     main_airplane = sysid;
 
-    qDebug()<<"set main_airplane "<<sysid<<x<<y<<z;
+    // 性能优化：移除调试日志
     vec_.clear();
     vec_.push_back(x);
     vec_.push_back(y);
@@ -226,8 +327,6 @@ void Mavlinktest2::set_main_airplane(int sysid, float x,float y,float z) { // �
 
     airplane_pos.clear();
     airplane_pos[sysid] = vec_;
-
-            //  _sendcom2(sysid);
 }
 
 void Mavlinktest2::caculate_pos(int sysid,float x,float y,float z){
@@ -243,7 +342,7 @@ void Mavlinktest2::caculate_pos(int sysid,float x,float y,float z){
 }
 
 //
-void Mavlinktest2::_sendcom(uint8_t test1,uint8_t test2,uint8_t test3,uint32_t pause, uint32_t conti) // 改为float
+void Mavlinktest2::_sendcom(uint8_t test1,uint8_t test2,uint8_t test3,uint32_t pause, uint32_t conti)
 {
     if (!_vehicle)
     {
@@ -259,30 +358,9 @@ void Mavlinktest2::_sendcom(uint8_t test1,uint8_t test2,uint8_t test3,uint32_t p
             qCDebug(VehicleLog) << "_handlePing: primary link gone!";
             return;
         }
-        //            auto protocol = qgcApp()->toolbox()->mavlinkProtocol();
         auto priority_link =sharedLink;
 
-                //  uint8_t send_test1=test1.toUInt();  不用强制转换了
-                //  int16_t send_test2=test2.toShort();
-        //   float send_test3=test3.toFloat();
-
         mavlink_message_t msg;
-        // mavlink_msg_swarm_start_flag_pack_chan(_vehicle->id(), //将test_mavlink 也改掉试试
-        //                                    1,
-        //                                    priority_link->mavlinkChannel(),
-        //                                    &msg,
-        //                                    test1,
-        //                                    test2,
-        //                                    test3,pause,conti);
-
-        //    mavlink_msg_swarm_start_flag_pack_chan(55, //将test_mavlink 也改掉试试
-        //                                            55,
-        //                                            priority_link->mavlinkChannel(),
-        //                                            &msg,
-        //                                            test1,
-        //                                            test2,
-        //                                            test3,pause,conti);
-
 
         mavlink_msg_swarm_start_flag_pack_chan(static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
                                                static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
@@ -292,9 +370,8 @@ void Mavlinktest2::_sendcom(uint8_t test1,uint8_t test2,uint8_t test3,uint32_t p
                                                test2,
                                                test3,pause,conti);
 
-
         _vehicle->sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
-        qDebug()<<__FUNCTION__<<test1<<test2<<test3<<pause<<conti;
+        // 性能优化：移除调试日志
     }
 }
 

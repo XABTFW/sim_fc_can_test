@@ -309,6 +309,7 @@
         <file alias="UdpSettings.qml">src/UI/preferences/UdpSettings.qml</file>
         <file alias="VehicleSummary.qml">src/Vehicle/VehicleSetup/VehicleSummary.qml</file>
         <file alias="VibrationPage.qml">src/AnalyzeView/VibrationPage.qml</file>
+        <file alias="PX4CANTestPage.qml">src/AnalyzeView/PX4CANTestPage.qml</file>
         <file alias="VideoSettings.qml">src/UI/preferences/VideoSettings.qml</file>
         <file alias="VirtualJoystick.qml">src/FlightDisplay/VirtualJoystick.qml</file>
         <file alias="VTOLLandingPatternEditor.qml">src/PlanView/VTOLLandingPatternEditor.qml</file>
@@ -354,6 +355,8 @@
         <file alias="Viewer3D/Viewer3DProgressBar.qml">src/Viewer3D/Viewer3DQml/Viewer3DProgressBar.qml</file>
         <file alias="QGroundControl/FlightDisplay/FlyViewTopRightPanel.qml">src/FlightDisplay/FlyViewTopRightPanel.qml</file>
         <file>Myswarm.qml</file>
+        <file>PrecisionStrike.qml</file>
+        <file>PrecisionStrikeTest.qml</file>
         <file>SwarmOperationPopup.qml</file>
         <file alias="MavlinkTestPage.qml">src/AnalyzeView/MAVLinkTestPage.qml</file>
         <file alias="swarm.qml">src/AnalyzeView/swarm.qml</file>
