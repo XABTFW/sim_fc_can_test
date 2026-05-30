@@ -310,6 +310,7 @@
         <file alias="VehicleSummary.qml">src/Vehicle/VehicleSetup/VehicleSummary.qml</file>
         <file alias="VibrationPage.qml">src/AnalyzeView/VibrationPage.qml</file>
         <file alias="PX4CANTestPage.qml">src/AnalyzeView/PX4CANTestPage.qml</file>
+        <file alias="VisualMavlinkTestPage.qml">src/AnalyzeView/VisualMavlinkTestPage.qml</file>
         <file alias="VideoSettings.qml">src/UI/preferences/VideoSettings.qml</file>
         <file alias="VirtualJoystick.qml">src/FlightDisplay/VirtualJoystick.qml</file>
         <file alias="VTOLLandingPatternEditor.qml">src/PlanView/VTOLLandingPatternEditor.qml</file>

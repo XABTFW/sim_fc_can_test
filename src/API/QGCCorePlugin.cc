@@ -107,6 +107,11 @@ const QVariantList &QGCCorePlugin::analyzePages()
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/PX4CANTestPage.qml")),
             QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/PX4CANTestIcon.svg")))),
 
+        QVariant::fromValue(new QmlComponentInfo(
+            tr("Visual MAVLink Test"),
+            QUrl::fromUserInput(QStringLiteral("qrc:/qml/VisualMavlinkTestPage.qml")),
+            QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/PX4CANTestIcon.svg")))),
+
          // ✅ 添加你自己的页面
         QVariant::fromValue(new QmlComponentInfo(
             tr("MAVLink Test"), // 显示在 Analyze 页签里的名字

@@ -30,6 +30,8 @@ target_sources(${CMAKE_PROJECT_NAME}
         Mavlinktest.cpp
         PX4CANTestController.h
         PX4CANTestController.cc
+        VisualMavlinkTestController.h
+        VisualMavlinkTestController.cc
 
 
 )
