@@ -34,6 +34,8 @@ AnalyzePage {
         packCmd: "--", channelCmd: "--", flightState: "--", packPower: "--",
         ch1: "--", ch2: "--", ch3: "--", ch4: "--", rx: 0, tx: 0, errors: 0, last: "--"
     })
+    property bool sendCoolingDown: false
+    property string lastCommand: "--"
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
@@ -116,9 +118,25 @@ AnalyzePage {
             root.addFrame(role, direction, canId, len, hexData, rawText)
         }
 
+        onCommandSent: function(role, canId, hexData) {
+            lastCommand = qsTr("%1 sysid=%2: hybrid_bms_can send %3 %4")
+                .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
+                .arg(controller.activeVehicleId)
+                .arg(canId)
+                .arg(hexData)
+            errorLabel.text = ""
+        }
+
         onErrorText: function(text) {
             errorLabel.text = text
         }
+    }
+
+    Timer {
+        id: sendCooldownTimer
+        interval: 450
+        repeat: false
+        onTriggered: sendCoolingDown = false
     }
 
     function normalizeId(canId) {
@@ -297,15 +315,37 @@ AnalyzePage {
             simData.last = now
             simData = simData
             simLogModel.insert(0, item)
-            if (simLogModel.count > 300) simLogModel.remove(300)
+            if (simLogModel.count > 120) simLogModel.remove(120)
         } else {
             if (direction === "RX") fcData.rx++
             if (direction === "TX") fcData.tx++
             fcData.last = now
             fcData = fcData
             fcLogModel.insert(0, item)
-            if (fcLogModel.count > 300) fcLogModel.remove(300)
+            if (fcLogModel.count > 120) fcLogModel.remove(120)
         }
+    }
+
+    function sendFrame(canId, hexData) {
+        if (sendCoolingDown) {
+            errorLabel.text = qsTr("发送过快，请稍后再试")
+            return
+        }
+
+        sendCoolingDown = true
+        sendCooldownTimer.restart()
+        controller.sendFrame(canId, hexData)
+    }
+
+    function sendFcControl(flightState, packPower, channelMask) {
+        if (sendCoolingDown) {
+            errorLabel.text = qsTr("发送过快，请稍后再试")
+            return
+        }
+
+        sendCoolingDown = true
+        sendCooldownTimer.restart()
+        controller.sendFcControl(flightState, packPower, channelMask)
     }
 
     function buildMbmsDataFrame(voltage, current, maxV, minV, tMax, tMin, insulation) {
@@ -323,17 +363,6 @@ AnalyzePage {
         return hexBytes(bytes)
     }
 
-    function commitSysId(field, messageLabel, setter) {
-        var value = parseInt(field.text)
-        if (isNaN(value) || value < 1 || value > 255) {
-            messageLabel.text = qsTr("sysid 必须是 1-255")
-            return
-        }
-
-        setter(value)
-        messageLabel.text = ""
-    }
-
     Component {
         id: pageComponent
 
@@ -345,26 +374,15 @@ AnalyzePage {
             RowLayout {
                 Layout.fillWidth: true
 
-                QGCLabel { text: qsTr("FC sysid") }
-                QGCTextField {
-                    id: fcSysIdField
-                    text: controller.fcVehicleId > 0 ? controller.fcVehicleId.toString() : ""
-                    validator: IntValidator { bottom: 1; top: 255 }
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    onEditingFinished: commitSysId(fcSysIdField, errorLabel, function(value) { controller.fcVehicleId = value })
-                    onAccepted: commitSysId(fcSysIdField, errorLabel, function(value) { controller.fcVehicleId = value })
-                    Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10
+                QGCLabel {
+                    text: controller.activeVehicleAvailable ?
+                              qsTr("当前连接 Vehicle sysid: %1").arg(controller.activeVehicleId) :
+                              qsTr("未连接 Vehicle")
+                    color: controller.activeVehicleAvailable ? qgcPal.text : qgcPal.warningText
                 }
 
-                QGCLabel { text: qsTr("SIM sysid") }
-                QGCTextField {
-                    id: simSysIdField
-                    text: controller.simVehicleId > 0 ? controller.simVehicleId.toString() : ""
-                    validator: IntValidator { bottom: 1; top: 255 }
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    onEditingFinished: commitSysId(simSysIdField, errorLabel, function(value) { controller.simVehicleId = value })
-                    onAccepted: commitSysId(simSysIdField, errorLabel, function(value) { controller.simVehicleId = value })
-                    Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10
+                QGCLabel {
+                    text: qsTr("本机角色")
                 }
 
                 QGCLabel {
@@ -377,8 +395,22 @@ AnalyzePage {
             TabBar {
                 id: tabs
                 Layout.fillWidth: true
+                onCurrentIndexChanged: controller.vehicleRole = currentIndex === 0 ? "fc" : "sim"
                 TabButton { text: qsTr("FC") }
                 TabButton { text: qsTr("SIM") }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                QGCLabel {
+                    text: qsTr("最后提交")
+                }
+                QGCLabel {
+                    text: lastCommand
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    opacity: 0.75
+                }
             }
 
             StackLayout {
@@ -424,18 +456,21 @@ AnalyzePage {
                 RowLayout {
                     QGCButton {
                         text: qsTr("发送电池组")
-                        onClicked: controller.sendFrameToFc("0x0401F456", hexBytes([flightSwitch.checked ? 0xff : 0x00, packSwitch.checked ? 0xff : 0x00]))
+                        enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                        onClicked: sendFrame("0x0401F456", hexBytes([flightSwitch.checked ? 0xff : 0x00, packSwitch.checked ? 0xff : 0x00]))
                     }
                     QGCButton {
                         text: qsTr("发送通道")
-                        onClicked: controller.sendFrameToFc("0x0402F456", hexBytes([ch1Switch.checked ? 0xff : 0x00, ch2Switch.checked ? 0xff : 0x00, ch3Switch.checked ? 0xff : 0x00, ch4Switch.checked ? 0xff : 0x00]))
+                        enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                        onClicked: sendFrame("0x0402F456", hexBytes([ch1Switch.checked ? 0xff : 0x00, ch2Switch.checked ? 0xff : 0x00, ch3Switch.checked ? 0xff : 0x00, ch4Switch.checked ? 0xff : 0x00]))
                     }
                 }
                 QGCButton {
                     text: qsTr("发送全部控制命令")
                     Layout.fillWidth: true
                     primary: true
-                    onClicked: controller.sendFcControl(flightSwitch.checked, packSwitch.checked, (ch1Switch.checked ? 1 : 0) | (ch2Switch.checked ? 2 : 0) | (ch3Switch.checked ? 4 : 0) | (ch4Switch.checked ? 8 : 0))
+                    enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                    onClicked: sendFcControl(flightSwitch.checked, packSwitch.checked, (ch1Switch.checked ? 1 : 0) | (ch2Switch.checked ? 2 : 0) | (ch3Switch.checked ? 4 : 0) | (ch4Switch.checked ? 8 : 0))
                 }
             }
 
@@ -503,7 +538,7 @@ AnalyzePage {
                     ]
                     onActivated: {
                         simCanId.text = currentValue
-                        simHex.text = model[currentIndex].data
+                        simHex.text = simFrameType.model[currentIndex].data
                     }
                 }
 
@@ -532,7 +567,8 @@ AnalyzePage {
                     text: qsTr("发送")
                     Layout.fillWidth: true
                     primary: true
-                    onClicked: controller.sendFrameToSim(simCanId.text, simHex.text)
+                    enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                    onClicked: sendFrame(simCanId.text, simHex.text)
                 }
 
                 SectionTitle { text: qsTr("模拟数据配置") }
@@ -564,12 +600,12 @@ AnalyzePage {
                     QGCTextField { id: simPeriod; Layout.fillWidth: true; text: "200" }
                 }
                 QGCButton {
-                    text: qsTr("按配置生成并发送 MBMS数据帧")
+                    text: qsTr("按配置生成 MBMS数据帧")
                     Layout.fillWidth: true
                     onClicked: {
                         simCanId.text = "0x041356F4"
                         simHex.text = buildMbmsDataFrame(simVoltage.text, simCurrent.text, simMaxV.text, simMinV.text, simTMax.text, simTMin.text, simInsulation.text)
-                        controller.sendFrameToSim(simCanId.text, simHex.text)
+                        errorLabel.text = qsTr("已生成 55 字节长帧，请确认后手动发送")
                     }
                 }
             }
