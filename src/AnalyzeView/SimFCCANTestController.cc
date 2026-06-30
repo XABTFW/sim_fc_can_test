@@ -16,9 +16,10 @@
 #include <QByteArray>
 #include <QRegularExpression>
 #include <QStringList>
+#include <QtGlobal>
 
 namespace {
-constexpr qint64 kMinSendIntervalMs = 400;
+constexpr qint64 kMinSendIntervalMs = 1000;
 }
 
 SimFCCANTestController::SimFCCANTestController(QObject* parent)
@@ -94,6 +95,36 @@ void SimFCCANTestController::sendFcControl(bool flightState, bool packPower, int
     if (_sendShellCommands(commands)) {
         emit commandSent(_vehicleRole, QStringLiteral("0x0401F456"), packData);
         emit commandSent(_vehicleRole, QStringLiteral("0x0402F456"), channelData);
+    }
+}
+
+void SimFCCANTestController::startModule(const QString& device, int simPeriodMs)
+{
+    const QString normalizedDevice = device.trimmed().isEmpty() ? QStringLiteral("can0") : device.trimmed();
+    const int normalizedPeriod = qBound(20, simPeriodMs, 5000);
+    const QString command = (_vehicleRole == QStringLiteral("sim")) ?
+        QStringLiteral("hybrid_bms_can start -m %1 -d %2 -p %3").arg(_vehicleRole, normalizedDevice).arg(normalizedPeriod) :
+        QStringLiteral("hybrid_bms_can start -m %1 -d %2").arg(_vehicleRole, normalizedDevice);
+
+    if (!_validateSendAllowed(1)) {
+        return;
+    }
+
+    if (_sendShellCommand(command)) {
+        emit commandSent(_vehicleRole, QStringLiteral("module"), command);
+    }
+}
+
+void SimFCCANTestController::stopModule()
+{
+    if (!_validateSendAllowed(1)) {
+        return;
+    }
+
+    const QString command = QStringLiteral("hybrid_bms_can stop");
+
+    if (_sendShellCommand(command)) {
+        emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
 
@@ -179,7 +210,10 @@ bool SimFCCANTestController::_sendShellCommands(const QStringList& commands)
         (void) chunk.append(MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN - dataSize, '\0');
 
         mavlink_message_t msg{};
-        const uint8_t flags = SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_RESPOND | SERIAL_CONTROL_FLAG_MULTI;
+        const bool isLastChunk = (output.size() <= MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN);
+        const uint8_t flags = isLastChunk ?
+            (SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_MULTI) :
+            (SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_RESPOND | SERIAL_CONTROL_FLAG_MULTI);
         (void) mavlink_msg_serial_control_pack_chan(
             _mavlink->getSystemId(),
             _mavlink->getComponentId(),

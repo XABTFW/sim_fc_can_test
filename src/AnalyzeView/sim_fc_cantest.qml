@@ -119,11 +119,18 @@ AnalyzePage {
         }
 
         onCommandSent: function(role, canId, hexData) {
-            lastCommand = qsTr("%1 sysid=%2: hybrid_bms_can send %3 %4")
-                .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
-                .arg(controller.activeVehicleId)
-                .arg(canId)
-                .arg(hexData)
+            if (canId === "module") {
+                lastCommand = qsTr("%1 sysid=%2: %3")
+                    .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
+                    .arg(controller.activeVehicleId)
+                    .arg(hexData)
+            } else {
+                lastCommand = qsTr("%1 sysid=%2: hybrid_bms_can send %3 %4")
+                    .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
+                    .arg(controller.activeVehicleId)
+                    .arg(canId)
+                    .arg(hexData)
+            }
             errorLabel.text = ""
         }
 
@@ -134,7 +141,7 @@ AnalyzePage {
 
     Timer {
         id: sendCooldownTimer
-        interval: 450
+        interval: 1050
         repeat: false
         onTriggered: sendCoolingDown = false
     }
@@ -383,6 +390,48 @@ AnalyzePage {
 
                 QGCLabel {
                     text: qsTr("本机角色")
+                }
+
+                QGCLabel {
+                    text: qsTr("CAN设备")
+                }
+
+                QGCTextField {
+                    id: canDeviceField
+                    text: "can0"
+                    Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10
+                }
+
+                QGCLabel {
+                    text: qsTr("SIM周期ms")
+                }
+
+                QGCTextField {
+                    id: startPeriodField
+                    text: "1000"
+                    validator: IntValidator { bottom: 20; top: 5000 }
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10
+                }
+
+                QGCButton {
+                    text: qsTr("启动当前角色")
+                    enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                    onClicked: {
+                        sendCoolingDown = true
+                        sendCooldownTimer.restart()
+                        controller.startModule(canDeviceField.text, parseInt(startPeriodField.text))
+                    }
+                }
+
+                QGCButton {
+                    text: qsTr("停止")
+                    enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                    onClicked: {
+                        sendCoolingDown = true
+                        sendCooldownTimer.restart()
+                        controller.stopModule()
+                    }
                 }
 
                 QGCLabel {
