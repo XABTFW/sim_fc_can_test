@@ -822,7 +822,8 @@ ApplicationWindow {
     // 定点打击窗口
     Loader {
         id: precisionStrikeLoader
-        source: "qrc:/qml/PrecisionStrike.qml"
+        active: false
+        source: ""
         asynchronous: false
         onLoaded: {
             console.log("定点打击窗口加载完成")

@@ -62,6 +62,7 @@ ToolStripActionList {
         ToolStripAction {
             text:           qsTr("定点打击")
             iconSource:     "/InstrumentValueIcons/target.svg"
+            visible:        false
 
             onTriggered:{
                 if (precisionStrikeWindow) {

@@ -323,6 +323,17 @@ AnalyzePage {
         return hexBytes(bytes)
     }
 
+    function commitSysId(field, messageLabel, setter) {
+        var value = parseInt(field.text)
+        if (isNaN(value) || value < 1 || value > 255) {
+            messageLabel.text = qsTr("sysid 必须是 1-255")
+            return
+        }
+
+        setter(value)
+        messageLabel.text = ""
+    }
+
     Component {
         id: pageComponent
 
@@ -335,18 +346,24 @@ AnalyzePage {
                 Layout.fillWidth: true
 
                 QGCLabel { text: qsTr("FC sysid") }
-                ComboBox {
-                    model: controller.vehicleIds
-                    currentIndex: controller.vehicleIds.indexOf(controller.fcVehicleId)
-                    onActivated: controller.fcVehicleId = currentValue
+                QGCTextField {
+                    id: fcSysIdField
+                    text: controller.fcVehicleId > 0 ? controller.fcVehicleId.toString() : ""
+                    validator: IntValidator { bottom: 1; top: 255 }
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    onEditingFinished: commitSysId(fcSysIdField, errorLabel, function(value) { controller.fcVehicleId = value })
+                    onAccepted: commitSysId(fcSysIdField, errorLabel, function(value) { controller.fcVehicleId = value })
                     Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10
                 }
 
                 QGCLabel { text: qsTr("SIM sysid") }
-                ComboBox {
-                    model: controller.vehicleIds
-                    currentIndex: controller.vehicleIds.indexOf(controller.simVehicleId)
-                    onActivated: controller.simVehicleId = currentValue
+                QGCTextField {
+                    id: simSysIdField
+                    text: controller.simVehicleId > 0 ? controller.simVehicleId.toString() : ""
+                    validator: IntValidator { bottom: 1; top: 255 }
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    onEditingFinished: commitSysId(simSysIdField, errorLabel, function(value) { controller.simVehicleId = value })
+                    onAccepted: commitSysId(simSysIdField, errorLabel, function(value) { controller.simVehicleId = value })
                     Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 10
                 }
 
