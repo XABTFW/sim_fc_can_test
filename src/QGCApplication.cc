@@ -51,6 +51,7 @@
 #include "MAVLinkChartController.h"
 #include "MAVLinkConsoleController.h"
 #include "PX4CANTestController.h"
+#include "SimFCCANTestController.h"
 #include "VisualMavlinkTestController.h"
 #include "MAVLinkProtocol.h"
 #include "MissionManager.h"
@@ -305,6 +306,7 @@ void QGCApplication::init()
     qmlRegisterType<LogDownloadController>("QGroundControl.Controllers", 1, 0, "LogDownloadController");
     qmlRegisterType<MAVLinkConsoleController>("QGroundControl.Controllers", 1, 0, "MAVLinkConsoleController");
     qmlRegisterType<PX4CANTestController>("QGroundControl.Controllers", 1, 0, "PX4CANTestController");
+    qmlRegisterType<SimFCCANTestController>("QGroundControl.Controllers", 1, 0, "SimFCCANTestController");
     qmlRegisterType<VisualMavlinkTestController>("QGroundControl.Controllers", 1, 0, "VisualMavlinkTestController");
 
 

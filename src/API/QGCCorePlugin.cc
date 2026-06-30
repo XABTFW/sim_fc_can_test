@@ -106,6 +106,10 @@ const QVariantList &QGCCorePlugin::analyzePages()
             tr("PX4 CAN Test"),
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/PX4CANTestPage.qml")),
             QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/PX4CANTestIcon.svg")))),
+        QVariant::fromValue(new QmlComponentInfo(
+            tr("sim_fc_cantest"),
+            QUrl::fromUserInput(QStringLiteral("qrc:/qml/sim_fc_cantest.qml")),
+            QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/PX4CANTestIcon.svg")))),
 
         QVariant::fromValue(new QmlComponentInfo(
             tr("Visual MAVLink Test"),
