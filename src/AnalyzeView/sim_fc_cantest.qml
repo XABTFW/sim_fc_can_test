@@ -595,13 +595,13 @@ AnalyzePage {
                     columns: 2
                     Layout.fillWidth: true
                     QGCLabel { text: qsTr("CAN ID") }
-                    QGCTextField { id: simCanId; Layout.fillWidth: true; text: "0x041356F4" }
+                    QGCTextField { id: simCanId; Layout.fillWidth: true; text: "0x043056F4" }
                     QGCLabel { text: qsTr("HEX数据") }
                     TextArea {
                         id: simHex
                         Layout.fillWidth: true
                         Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 5
-                        text: "01 74 0E 74 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 74 0E 00 00 42 0E 00 00 46 00 00 41 00 00 88 13"
+                        text: "0C 01 08 14 00 46 00 46"
                         wrapMode: TextEdit.Wrap
                         color: qgcPal.text
                         background: Rectangle {

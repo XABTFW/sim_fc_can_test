@@ -16,6 +16,7 @@
 #include <QByteArray>
 #include <QRegularExpression>
 #include <QStringList>
+#include <QTimer>
 #include <QtGlobal>
 
 namespace {
@@ -71,30 +72,18 @@ void SimFCCANTestController::sendFrameToSim(const QString& canId, const QString&
 
 void SimFCCANTestController::sendFcControl(bool flightState, bool packPower, int channelMask)
 {
-    const QString packData = QStringLiteral("%1 %2")
-        .arg(flightState ? QStringLiteral("FF") : QStringLiteral("00"))
-        .arg(packPower ? QStringLiteral("FF") : QStringLiteral("00"));
-
-    const QString channelData = QStringLiteral("%1 %2 %3 %4")
-        .arg(channelMask & 0x01 ? QStringLiteral("FF") : QStringLiteral("00"))
-        .arg(channelMask & 0x02 ? QStringLiteral("FF") : QStringLiteral("00"))
-        .arg(channelMask & 0x04 ? QStringLiteral("FF") : QStringLiteral("00"))
-        .arg(channelMask & 0x08 ? QStringLiteral("FF") : QStringLiteral("00"));
-
     setVehicleRole(QStringLiteral("fc"));
+    const QString command = QStringLiteral("hybrid_bms_can control %1 %2 0x%3")
+        .arg(flightState ? 1 : 0)
+        .arg(packPower ? 1 : 0)
+        .arg(channelMask & 0x0f, 0, 16);
 
-    const QStringList commands{
-        QStringLiteral("hybrid_bms_can send 0x0401F456 %1").arg(packData),
-        QStringLiteral("hybrid_bms_can send 0x0402F456 %1").arg(channelData),
-    };
-
-    if (!_validateSendAllowed(commands.count())) {
+    if (!_validateSendAllowed(1)) {
         return;
     }
 
-    if (_sendShellCommands(commands)) {
-        emit commandSent(_vehicleRole, QStringLiteral("0x0401F456"), packData);
-        emit commandSent(_vehicleRole, QStringLiteral("0x0402F456"), channelData);
+    if (_sendShellCommand(command)) {
+        emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
 
@@ -184,12 +173,6 @@ bool SimFCCANTestController::_sendShellCommands(const QStringList& commands)
         return false;
     }
 
-    auto primaryLink = _vehicle->vehicleLinkManager()->primaryLink().lock();
-    if (!primaryLink) {
-        emit errorText(QStringLiteral("No primary link for vehicle %1").arg(_vehicle->id()));
-        return false;
-    }
-
     QByteArray output;
     for (const QString& command : commands) {
         if (command.trimmed().isEmpty()) {
@@ -204,40 +187,67 @@ bool SimFCCANTestController::_sendShellCommands(const QStringList& commands)
         return false;
     }
 
-    while (!output.isEmpty()) {
-        QByteArray chunk = output.left(MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN);
-        const int dataSize = chunk.size();
-        (void) chunk.append(MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN - dataSize, '\0');
-
-        mavlink_message_t msg{};
-        const bool isLastChunk = (output.size() <= MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN);
-        const uint8_t flags = isLastChunk ?
-            (SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_MULTI) :
-            (SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_RESPOND | SERIAL_CONTROL_FLAG_MULTI);
-        (void) mavlink_msg_serial_control_pack_chan(
-            _mavlink->getSystemId(),
-            _mavlink->getComponentId(),
-            primaryLink->mavlinkChannel(),
-            &msg,
-            SERIAL_CONTROL_DEV_SHELL,
-            flags,
-            0,
-            0,
-            dataSize,
-            reinterpret_cast<uint8_t*>(chunk.data()),
-            _vehicle->id(),
-            _vehicle->defaultComponentId());
-
-        if (!_vehicle->sendMessageOnLinkThreadSafe(primaryLink.get(), msg)) {
-            emit errorText(QStringLiteral("Failed to send command to vehicle %1").arg(_vehicle->id()));
-            return false;
-        }
-
-        (void) output.remove(0, dataSize);
+    if (output.size() > MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN) {
+        emit errorText(QStringLiteral("Command too long for MAVLink shell; use a shorter CAN frame first"));
+        return false;
     }
+
+    if (!_sendSerialControl(output, false)) {
+        return false;
+    }
+
+    QTimer::singleShot(250, this, [this]() {
+        (void) _sendSerialControl(QByteArray(), true);
+    });
 
     _lastSendTimer.restart();
     emit errorText(QString());
+    return true;
+}
+
+bool SimFCCANTestController::_sendSerialControl(const QByteArray& data, bool close)
+{
+    if (!_vehicle) {
+        emit errorText(QStringLiteral("No active Vehicle connected"));
+        return false;
+    }
+
+    auto primaryLink = _vehicle->vehicleLinkManager()->primaryLink().lock();
+    if (!primaryLink) {
+        emit errorText(QStringLiteral("No primary link for vehicle %1").arg(_vehicle->id()));
+        return false;
+    }
+
+    if (data.size() > MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN) {
+        emit errorText(QStringLiteral("Command too long for MAVLink shell"));
+        return false;
+    }
+
+    QByteArray chunk = data;
+    const int dataSize = chunk.size();
+    (void) chunk.append(MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN - dataSize, '\0');
+
+    mavlink_message_t msg{};
+    const uint8_t flags = close ? 0 : SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_RESPOND | SERIAL_CONTROL_FLAG_MULTI;
+    (void) mavlink_msg_serial_control_pack_chan(
+        _mavlink->getSystemId(),
+        _mavlink->getComponentId(),
+        primaryLink->mavlinkChannel(),
+        &msg,
+        SERIAL_CONTROL_DEV_SHELL,
+        flags,
+        0,
+        0,
+        dataSize,
+        reinterpret_cast<uint8_t*>(chunk.data()),
+        _vehicle->id(),
+        _vehicle->defaultComponentId());
+
+    if (!_vehicle->sendMessageOnLinkThreadSafe(primaryLink.get(), msg)) {
+        emit errorText(QStringLiteral("Failed to send command to vehicle %1").arg(_vehicle->id()));
+        return false;
+    }
+
     return true;
 }
 

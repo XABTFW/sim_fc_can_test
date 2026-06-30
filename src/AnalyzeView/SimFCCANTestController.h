@@ -10,6 +10,7 @@
 #pragma once
 
 #include <QObject>
+#include <QByteArray>
 #include <QElapsedTimer>
 #include <QString>
 #include <QStringList>
@@ -58,6 +59,7 @@ private slots:
 private:
     bool _sendShellCommand(const QString& command);
     bool _sendShellCommands(const QStringList& commands);
+    bool _sendSerialControl(const QByteArray& data, bool close);
     bool _validateSendAllowed(int commandCount);
     bool _parseFrameText(const QString& text, QString& direction, QString& canId, QString& hexData) const;
     bool _sendFrame(const QString& canId, const QString& hexData, bool enforceRateLimit);
