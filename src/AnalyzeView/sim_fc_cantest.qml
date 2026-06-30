@@ -308,18 +308,18 @@ AnalyzePage {
         }
     }
 
-    function buildMbmsDataFrame() {
+    function buildMbmsDataFrame(voltage, current, maxV, minV, tMax, tMin, insulation) {
         var bytes = []
         for (var i = 0; i < 55; i++) bytes.push(0)
         bytes[0] = 1
-        setU16(bytes, 1, Math.round(Number(simVoltage.text) * 10))
-        setU16(bytes, 3, Math.round(Number(simVoltage.text) * 10))
-        setU16(bytes, 23, Math.round((Number(simCurrent.text) + 200) * 10))
-        setU16(bytes, 39, Math.round(Number(simMaxV.text)))
-        setU16(bytes, 43, Math.round(Number(simMinV.text)))
-        bytes[47] = Math.round(Number(simTMax.text) + 40)
-        bytes[50] = Math.round(Number(simTMin.text) + 40)
-        setU16(bytes, 53, Math.round(Number(simInsulation.text)))
+        setU16(bytes, 1, Math.round(Number(voltage) * 10))
+        setU16(bytes, 3, Math.round(Number(voltage) * 10))
+        setU16(bytes, 23, Math.round((Number(current) + 200) * 10))
+        setU16(bytes, 39, Math.round(Number(maxV)))
+        setU16(bytes, 43, Math.round(Number(minV)))
+        bytes[47] = Math.round(Number(tMax) + 40)
+        bytes[50] = Math.round(Number(tMin) + 40)
+        setU16(bytes, 53, Math.round(Number(insulation)))
         return hexBytes(bytes)
     }
 
@@ -568,7 +568,7 @@ AnalyzePage {
                     Layout.fillWidth: true
                     onClicked: {
                         simCanId.text = "0x041356F4"
-                        simHex.text = buildMbmsDataFrame()
+                        simHex.text = buildMbmsDataFrame(simVoltage.text, simCurrent.text, simMaxV.text, simMinV.text, simTMax.text, simTMin.text, simInsulation.text)
                         controller.sendFrameToSim(simCanId.text, simHex.text)
                     }
                 }
