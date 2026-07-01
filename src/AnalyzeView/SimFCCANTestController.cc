@@ -16,11 +16,47 @@
 #include <QByteArray>
 #include <QRegularExpression>
 #include <QStringList>
-#include <QTimer>
 #include <QtGlobal>
+
+#include <cstdint>
 
 namespace {
 constexpr qint64 kMinSendIntervalMs = 1000;
+constexpr uint16_t kHybridBmsTunnelPayloadType = 32001;
+constexpr uint8_t kHybridBmsTunnelVersion = 1;
+
+enum class HybridBmsTunnelOpcode : uint8_t {
+    Start = 1,
+    Stop = 2,
+    Control = 3,
+    SendFrame = 4,
+};
+
+QByteArray tunnelHeader(HybridBmsTunnelOpcode opcode)
+{
+    QByteArray payload;
+    payload.append('H');
+    payload.append('B');
+    payload.append('M');
+    payload.append('S');
+    payload.append(static_cast<char>(kHybridBmsTunnelVersion));
+    payload.append(static_cast<char>(opcode));
+    return payload;
+}
+
+void appendU16(QByteArray& payload, uint16_t value)
+{
+    payload.append(static_cast<char>(value & 0xff));
+    payload.append(static_cast<char>((value >> 8) & 0xff));
+}
+
+void appendU32(QByteArray& payload, uint32_t value)
+{
+    payload.append(static_cast<char>(value & 0xff));
+    payload.append(static_cast<char>((value >> 8) & 0xff));
+    payload.append(static_cast<char>((value >> 16) & 0xff));
+    payload.append(static_cast<char>((value >> 24) & 0xff));
+}
 }
 
 SimFCCANTestController::SimFCCANTestController(QObject* parent)
@@ -73,16 +109,22 @@ void SimFCCANTestController::sendFrameToSim(const QString& canId, const QString&
 void SimFCCANTestController::sendFcControl(bool flightState, bool packPower, int channelMask)
 {
     setVehicleRole(QStringLiteral("fc"));
-    const QString command = QStringLiteral("hybrid_bms_can control %1 %2 0x%3")
-        .arg(flightState ? 1 : 0)
-        .arg(packPower ? 1 : 0)
-        .arg(channelMask & 0x0f, 0, 16);
 
     if (!_validateSendAllowed(1)) {
         return;
     }
 
-    if (_sendShellCommand(command)) {
+    QByteArray payload = tunnelHeader(HybridBmsTunnelOpcode::Control);
+    payload.append(static_cast<char>(flightState ? 1 : 0));
+    payload.append(static_cast<char>(packPower ? 1 : 0));
+    payload.append(static_cast<char>(channelMask & 0x0f));
+
+    const QString command = QStringLiteral("hybrid_bms_can control %1 %2 0x%3")
+        .arg(flightState ? 1 : 0)
+        .arg(packPower ? 1 : 0)
+        .arg(channelMask & 0x0f, 0, 16);
+
+    if (_sendTunnelPayload(payload)) {
         emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
@@ -91,6 +133,7 @@ void SimFCCANTestController::startModule(const QString& device, int simPeriodMs)
 {
     const QString normalizedDevice = device.trimmed().isEmpty() ? QStringLiteral("can0") : device.trimmed();
     const int normalizedPeriod = qBound(20, simPeriodMs, 5000);
+    const uint8_t deviceIndex = normalizedDevice.compare(QStringLiteral("can1"), Qt::CaseInsensitive) == 0 ? 1 : 0;
     const QString command = (_vehicleRole == QStringLiteral("sim")) ?
         QStringLiteral("hybrid_bms_can start -m %1 -d %2 -p %3").arg(_vehicleRole, normalizedDevice).arg(normalizedPeriod) :
         QStringLiteral("hybrid_bms_can start -m %1 -d %2").arg(_vehicleRole, normalizedDevice);
@@ -99,7 +142,12 @@ void SimFCCANTestController::startModule(const QString& device, int simPeriodMs)
         return;
     }
 
-    if (_sendShellCommand(command)) {
+    QByteArray payload = tunnelHeader(HybridBmsTunnelOpcode::Start);
+    payload.append(static_cast<char>(_vehicleRole == QStringLiteral("sim") ? 2 : 1));
+    payload.append(static_cast<char>(deviceIndex));
+    appendU16(payload, static_cast<uint16_t>(normalizedPeriod));
+
+    if (_sendTunnelPayload(payload)) {
         emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
@@ -112,7 +160,9 @@ void SimFCCANTestController::stopModule()
 
     const QString command = QStringLiteral("hybrid_bms_can stop");
 
-    if (_sendShellCommand(command)) {
+    QByteArray payload = tunnelHeader(HybridBmsTunnelOpcode::Stop);
+
+    if (_sendTunnelPayload(payload)) {
         emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
@@ -125,15 +175,29 @@ bool SimFCCANTestController::_sendFrame(const QString& canId, const QString& hex
 
     QString normalizedCanId = canId.trimmed();
     QString normalizedHex = hexData.trimmed();
-    normalizedHex.replace(QLatin1Char(','), QLatin1Char(' '));
 
-    if (normalizedCanId.isEmpty() || normalizedHex.isEmpty()) {
+    QVector<uint8_t> bytes;
+    if (normalizedCanId.isEmpty() || normalizedHex.isEmpty() || !_parseHexData(normalizedHex, bytes)) {
         emit errorText(QStringLiteral("CAN ID and HEX data are required"));
         return false;
     }
 
-    const QString command = QStringLiteral("hybrid_bms_can send %1 %2").arg(normalizedCanId, normalizedHex);
-    if (_sendShellCommand(command)) {
+    bool ok = false;
+    const uint32_t parsedCanId = normalizedCanId.toUInt(&ok, 0);
+    if (!ok || parsedCanId > 0x1fffffff || bytes.size() > 64) {
+        emit errorText(QStringLiteral("Invalid CAN ID or CAN FD data length"));
+        return false;
+    }
+
+    QByteArray payload = tunnelHeader(HybridBmsTunnelOpcode::SendFrame);
+    appendU32(payload, parsedCanId);
+    payload.append(static_cast<char>(bytes.size()));
+
+    for (uint8_t byte : bytes) {
+        payload.append(static_cast<char>(byte));
+    }
+
+    if (_sendTunnelPayload(payload)) {
         emit commandSent(_vehicleRole, normalizedCanId, normalizedHex.simplified().toUpper());
         return true;
     }
@@ -161,54 +225,15 @@ bool SimFCCANTestController::_validateSendAllowed(int commandCount)
     return true;
 }
 
-bool SimFCCANTestController::_sendShellCommand(const QString& command)
-{
-    return _sendShellCommands(QStringList{command});
-}
-
-bool SimFCCANTestController::_sendShellCommands(const QStringList& commands)
+bool SimFCCANTestController::_sendTunnelPayload(const QByteArray& payload)
 {
     if (!_vehicle) {
         emit errorText(QStringLiteral("No active Vehicle connected"));
         return false;
     }
 
-    QByteArray output;
-    for (const QString& command : commands) {
-        if (command.trimmed().isEmpty()) {
-            continue;
-        }
-        output.append(command.toUtf8());
-        output.append('\n');
-    }
-
-    if (output.isEmpty()) {
-        emit errorText(QStringLiteral("No command to send"));
-        return false;
-    }
-
-    if (output.size() > MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN) {
-        emit errorText(QStringLiteral("Command too long for MAVLink shell; use a shorter CAN frame first"));
-        return false;
-    }
-
-    if (!_sendSerialControl(output, false)) {
-        return false;
-    }
-
-    QTimer::singleShot(250, this, [this]() {
-        (void) _sendSerialControl(QByteArray(), true);
-    });
-
-    _lastSendTimer.restart();
-    emit errorText(QString());
-    return true;
-}
-
-bool SimFCCANTestController::_sendSerialControl(const QByteArray& data, bool close)
-{
-    if (!_vehicle) {
-        emit errorText(QStringLiteral("No active Vehicle connected"));
+    if (payload.isEmpty() || payload.size() > MAVLINK_MSG_TUNNEL_FIELD_PAYLOAD_LEN) {
+        emit errorText(QStringLiteral("Invalid hybrid BMS MAVLink tunnel payload"));
         return false;
     }
 
@@ -218,37 +243,68 @@ bool SimFCCANTestController::_sendSerialControl(const QByteArray& data, bool clo
         return false;
     }
 
-    if (data.size() > MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN) {
-        emit errorText(QStringLiteral("Command too long for MAVLink shell"));
-        return false;
-    }
-
-    QByteArray chunk = data;
-    const int dataSize = chunk.size();
-    (void) chunk.append(MAVLINK_MSG_SERIAL_CONTROL_FIELD_DATA_LEN - dataSize, '\0');
+    QByteArray tunnelPayload = payload;
+    const int payloadSize = tunnelPayload.size();
+    (void) tunnelPayload.append(MAVLINK_MSG_TUNNEL_FIELD_PAYLOAD_LEN - payloadSize, '\0');
 
     mavlink_message_t msg{};
-    const uint8_t flags = close ? 0 : SERIAL_CONTROL_FLAG_EXCLUSIVE | SERIAL_CONTROL_FLAG_RESPOND | SERIAL_CONTROL_FLAG_MULTI;
-    (void) mavlink_msg_serial_control_pack_chan(
+    (void) mavlink_msg_tunnel_pack_chan(
         _mavlink->getSystemId(),
         _mavlink->getComponentId(),
         primaryLink->mavlinkChannel(),
         &msg,
-        SERIAL_CONTROL_DEV_SHELL,
-        flags,
-        0,
-        0,
-        dataSize,
-        reinterpret_cast<uint8_t*>(chunk.data()),
         _vehicle->id(),
-        _vehicle->defaultComponentId());
+        _vehicle->defaultComponentId(),
+        kHybridBmsTunnelPayloadType,
+        payloadSize,
+        reinterpret_cast<uint8_t*>(tunnelPayload.data()));
 
     if (!_vehicle->sendMessageOnLinkThreadSafe(primaryLink.get(), msg)) {
         emit errorText(QStringLiteral("Failed to send command to vehicle %1").arg(_vehicle->id()));
         return false;
     }
 
+    _lastSendTimer.restart();
+    emit errorText(QString());
     return true;
+}
+
+bool SimFCCANTestController::_parseHexData(const QString& hexData, QVector<uint8_t>& bytesOut) const
+{
+    QString clean = hexData;
+    clean.replace(QStringLiteral("0x"), QStringLiteral(" "), Qt::CaseInsensitive);
+    clean.replace(QLatin1Char(','), QLatin1Char(' '));
+    clean.replace(QRegularExpression(QStringLiteral("[^0-9A-Fa-f]")), QStringLiteral(" "));
+
+    const QStringList parts = clean.simplified().split(QLatin1Char(' '), Qt::SkipEmptyParts);
+    bytesOut.clear();
+
+    for (const QString& part : parts) {
+        if (part.size() > 2) {
+            if (part.size() % 2 != 0) {
+                return false;
+            }
+
+            for (int i = 0; i < part.size(); i += 2) {
+                bool ok = false;
+                const uint value = part.mid(i, 2).toUInt(&ok, 16);
+                if (!ok || value > 0xff) {
+                    return false;
+                }
+                bytesOut.append(static_cast<uint8_t>(value));
+            }
+
+        } else {
+            bool ok = false;
+            const uint value = part.toUInt(&ok, 16);
+            if (!ok || value > 0xff) {
+                return false;
+            }
+            bytesOut.append(static_cast<uint8_t>(value));
+        }
+    }
+
+    return !bytesOut.isEmpty() && bytesOut.size() <= 64;
 }
 
 void SimFCCANTestController::_setActiveVehicle(Vehicle* vehicle)

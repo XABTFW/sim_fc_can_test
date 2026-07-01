@@ -13,7 +13,7 @@
 #include <QByteArray>
 #include <QElapsedTimer>
 #include <QString>
-#include <QStringList>
+#include <QVector>
 
 #include "MAVLinkProtocol.h"
 #include "Vehicle.h"
@@ -57,10 +57,9 @@ private slots:
     void _handleVehicleTextMessage(int sysid, int componentid, int severity, QString text, QString description);
 
 private:
-    bool _sendShellCommand(const QString& command);
-    bool _sendShellCommands(const QStringList& commands);
-    bool _sendSerialControl(const QByteArray& data, bool close);
+    bool _sendTunnelPayload(const QByteArray& payload);
     bool _validateSendAllowed(int commandCount);
+    bool _parseHexData(const QString& hexData, QVector<uint8_t>& bytesOut) const;
     bool _parseFrameText(const QString& text, QString& direction, QString& canId, QString& hexData) const;
     bool _sendFrame(const QString& canId, const QString& hexData, bool enforceRateLimit);
 

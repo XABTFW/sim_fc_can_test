@@ -120,12 +120,12 @@ AnalyzePage {
 
         onCommandSent: function(role, canId, hexData) {
             if (canId === "module") {
-                lastCommand = qsTr("%1 sysid=%2: %3")
+                lastCommand = qsTr("%1 Vehicle=%2: %3")
                     .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
                     .arg(controller.activeVehicleId)
                     .arg(hexData)
             } else {
-                lastCommand = qsTr("%1 sysid=%2: hybrid_bms_can send %3 %4")
+                lastCommand = qsTr("%1 Vehicle=%2: hybrid_bms_can send %3 %4")
                     .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
                     .arg(controller.activeVehicleId)
                     .arg(canId)
