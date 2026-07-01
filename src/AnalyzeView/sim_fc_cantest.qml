@@ -322,20 +322,9 @@ AnalyzePage {
         }
     }
 
-    function isPeerManualRxFrame(role, canId) {
+    function isPeerManualRxFrame(canId) {
         var id = normalizeId(canId)
-
-        if (role === "sim") {
-            return id === "0x0401F456" || id === "0x0402F456"
-        }
-
-        return id === "0x040156F4" ||
-               id === "0x040256F4" ||
-               id === "0x041256F4" ||
-               id === "0x041356F4" ||
-               id === "0x042056F4" ||
-               id === "0x043056F4" ||
-               id === "0x044056F4"
+        return id === "0x044056F4"
     }
 
     function addManualFrame(receiverRole, canId, len, hexData) {
@@ -380,7 +369,7 @@ AnalyzePage {
             insertLog(direction === "RX" ? fcRxLogModel : fcTxLogModel, item, 120)
         }
 
-        if (direction === "RX" && isPeerManualRxFrame(role, canId)) {
+        if (direction === "RX" && isPeerManualRxFrame(canId)) {
             addManualFrame(role, canId, len, hexData)
         }
     }
@@ -633,7 +622,7 @@ AnalyzePage {
                 }
 
                 LogTable {
-                    title: qsTr("对端手动/测试 RX 内容")
+                    title: qsTr("对端手动测试 RX 内容")
                     logModel: fcManualLogModel
                 }
             }
@@ -797,7 +786,7 @@ AnalyzePage {
                 }
 
                 LogTable {
-                    title: qsTr("对端手动/测试 RX 内容")
+                    title: qsTr("对端手动测试 RX 内容")
                     logModel: simManualLogModel
                 }
             }
