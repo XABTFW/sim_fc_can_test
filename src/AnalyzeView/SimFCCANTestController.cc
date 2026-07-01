@@ -140,6 +140,54 @@ void SimFCCANTestController::sendFrameToSim(const QString& canId, const QString&
     sendFrame(canId, hexData);
 }
 
+void SimFCCANTestController::sendSimManualFrame(const QString& canId, const QString& hexData)
+{
+    setVehicleRole(QStringLiteral("sim"));
+
+    if (!_validateSendAllowed(_vehicleRole, 1)) {
+        return;
+    }
+
+    bool ok = false;
+    const uint32_t parsedCanId = canId.trimmed().toUInt(&ok, 0);
+
+    QVector<uint8_t> bytes;
+    if (!ok || parsedCanId > 0x1fffffff || !_parseHexData(hexData, bytes)) {
+        emit errorText(QStringLiteral("Invalid SIM manual CAN frame"));
+        return;
+    }
+
+    if (parsedCanId == kSimNumberTestId) {
+        (void) _sendFrame(canId, hexData, false);
+        return;
+    }
+
+    QVector<uint8_t> marker;
+    marker.append(static_cast<uint8_t>(parsedCanId & 0xff));
+    marker.append(static_cast<uint8_t>((parsedCanId >> 8) & 0xff));
+    marker.append(static_cast<uint8_t>((parsedCanId >> 16) & 0xff));
+    marker.append(static_cast<uint8_t>((parsedCanId >> 24) & 0xff));
+    marker.append(static_cast<uint8_t>(bytes.size()));
+
+    const int markerDataLen = qMin(bytes.size(), 59);
+    for (int i = 0; i < markerDataLen; i++) {
+        marker.append(bytes[i]);
+    }
+
+    QStringList markerHexParts;
+    markerHexParts.reserve(marker.size());
+
+    for (uint8_t byte : marker) {
+        markerHexParts.append(QStringLiteral("%1").arg(byte, 2, 16, QLatin1Char('0')).toUpper());
+    }
+
+    if (!_sendFrame(QStringLiteral("0x%1").arg(kSimNumberTestId, 8, 16, QLatin1Char('0')), markerHexParts.join(QLatin1Char(' ')), false)) {
+        return;
+    }
+
+    (void) _sendFrame(canId, hexData, false);
+}
+
 void SimFCCANTestController::sendFcControl(bool flightState, bool packPower, int channelMask)
 {
     setVehicleRole(QStringLiteral("fc"));

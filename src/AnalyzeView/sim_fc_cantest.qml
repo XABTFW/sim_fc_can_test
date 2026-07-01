@@ -193,6 +193,20 @@ AnalyzePage {
         return (bytes[index] & 0xff) | ((bytes[index + 1] & 0xff) << 8)
     }
 
+    function u32(bytes, index) {
+        if (bytes.length <= index + 3) {
+            return 0
+        }
+        return (bytes[index] & 0xff) |
+               ((bytes[index + 1] & 0xff) << 8) |
+               ((bytes[index + 2] & 0xff) << 16) |
+               ((bytes[index + 3] & 0xff) << 24)
+    }
+
+    function canIdText(value) {
+        return "0x" + ("00000000" + (value >>> 0).toString(16).toUpperCase()).slice(-8)
+    }
+
     function setU16(bytes, index, value) {
         bytes[index] = value & 0xff
         bytes[index + 1] = (value >> 8) & 0xff
@@ -305,9 +319,19 @@ AnalyzePage {
                 fcData.dcdcCurrent = dcdcI + " A"
                 fcData.dcdcTemp = dcdcT + " C"
             }
-        } else if (id === "0x044056F4" && bytes.length >= 2) {
-            var testValue = u16(bytes, 0)
-            text += ": value=" + testValue
+        } else if (id === "0x044056F4") {
+            if (bytes.length >= 5) {
+                var originalId = canIdText(u32(bytes, 0))
+                var originalLen = bytes[4] & 0xff
+                var originalData = hexBytes(bytes.slice(5))
+                text = qsTr("SIM手动发送: %1, len=%2, data=%3")
+                    .arg(originalId)
+                    .arg(originalLen)
+                    .arg(originalData)
+            } else if (bytes.length >= 2) {
+                var testValue = u16(bytes, 0)
+                text += ": value=" + testValue
+            }
         }
 
         fcData = fcData
@@ -383,7 +407,7 @@ AnalyzePage {
         sendCoolingDown = true
         sendCooldownTimer.restart()
         if (senderRole === "sim") {
-            controller.sendFrameToSim(canId, hexData)
+            controller.sendSimManualFrame(canId, hexData)
         } else {
             controller.sendFrameToFc(canId, hexData)
         }

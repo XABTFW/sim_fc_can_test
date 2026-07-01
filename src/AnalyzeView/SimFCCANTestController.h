@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE void sendFrame(const QString& canId, const QString& hexData);
     Q_INVOKABLE void sendFrameToFc(const QString& canId, const QString& hexData);
     Q_INVOKABLE void sendFrameToSim(const QString& canId, const QString& hexData);
+    Q_INVOKABLE void sendSimManualFrame(const QString& canId, const QString& hexData);
     Q_INVOKABLE void sendFcControl(bool flightState, bool packPower, int channelMask);
     Q_INVOKABLE void startModule(const QString& device, int simPeriodMs);
     Q_INVOKABLE void stopModule();
