@@ -39,8 +39,12 @@ AnalyzePage {
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
-    ListModel { id: fcLogModel }
-    ListModel { id: simLogModel }
+    ListModel { id: fcRxLogModel }
+    ListModel { id: fcTxLogModel }
+    ListModel { id: fcManualLogModel }
+    ListModel { id: simRxLogModel }
+    ListModel { id: simTxLogModel }
+    ListModel { id: simManualLogModel }
 
     component SectionTitle: QGCLabel {
         font.pointSize: ScreenTools.mediumFontPointSize
@@ -69,12 +73,14 @@ AnalyzePage {
 
     component LogTable: ColumnLayout {
         property var logModel
+        property string title
         Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.minimumHeight: ScreenTools.defaultFontPixelHeight * 6
 
         RowLayout {
             Layout.fillWidth: true
-            SectionTitle { text: qsTr("原始帧日志") }
+            SectionTitle { text: title }
             QGCButton {
                 text: qsTr("清空")
                 onClicked: logModel.clear()
@@ -102,7 +108,7 @@ AnalyzePage {
                     QGCLabel { text: time; Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 9 }
                     QGCLabel { text: direction; Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 4; font.bold: true }
                     QGCLabel { text: canId; Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 12 }
-                    QGCLabel { text: dlc; Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 4 }
+                    QGCLabel { text: dlc.toString(); Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 4 }
                     QGCLabel { text: hexData; Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 28; elide: Text.ElideRight }
                     QGCLabel { text: name; Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 16 }
                     QGCLabel { text: parsed; Layout.fillWidth: true; elide: Text.ElideRight }
@@ -131,6 +137,7 @@ AnalyzePage {
                     .arg(canId)
                     .arg(hexData)
             }
+            root.addManualFrame(role, canId, hexData)
             errorLabel.text = ""
         }
 
@@ -303,6 +310,29 @@ AnalyzePage {
         return text
     }
 
+    function insertLog(logModel, item, maxCount) {
+        logModel.insert(0, item)
+        if (logModel.count > maxCount) {
+            logModel.remove(maxCount)
+        }
+    }
+
+    function addManualFrame(role, canId, hexData) {
+        var now = new Date().toLocaleTimeString()
+        var isModuleCommand = canId === "module"
+        var item = {
+            time: now,
+            direction: qsTr("手动"),
+            canId: isModuleCommand ? qsTr("模块") : normalizeId(canId),
+            dlc: isModuleCommand ? "--" : byteArray(hexData).length,
+            hexData: hexData,
+            name: isModuleCommand ? qsTr("模块命令") : protocolName(canId),
+            parsed: isModuleCommand ? hexData : parseFrame(canId, hexData, role, "MANUAL")
+        }
+
+        insertLog(role === "sim" ? simManualLogModel : fcManualLogModel, item, 80)
+    }
+
     function addFrame(role, direction, canId, len, hexData, rawText) {
         var now = new Date().toLocaleTimeString()
         var parsed = parseFrame(canId, hexData, role, direction)
@@ -321,15 +351,13 @@ AnalyzePage {
             if (direction === "TX") simData.tx++
             simData.last = now
             simData = simData
-            simLogModel.insert(0, item)
-            if (simLogModel.count > 120) simLogModel.remove(120)
+            insertLog(direction === "RX" ? simRxLogModel : simTxLogModel, item, 120)
         } else {
             if (direction === "RX") fcData.rx++
             if (direction === "TX") fcData.tx++
             fcData.last = now
             fcData = fcData
-            fcLogModel.insert(0, item)
-            if (fcLogModel.count > 120) fcLogModel.remove(120)
+            insertLog(direction === "RX" ? fcRxLogModel : fcTxLogModel, item, 120)
         }
     }
 
@@ -555,7 +583,20 @@ AnalyzePage {
                     ValueCell { label: qsTr("errors"); value: fcData.errors.toString() }
                 }
 
-                LogTable { logModel: fcLogModel }
+                LogTable {
+                    title: qsTr("本机 CAN RX 接收内容")
+                    logModel: fcRxLogModel
+                }
+
+                LogTable {
+                    title: qsTr("本机 CAN TX 发出内容")
+                    logModel: fcTxLogModel
+                }
+
+                LogTable {
+                    title: qsTr("手动发送内容（对端应 RX）")
+                    logModel: fcManualLogModel
+                }
             }
         }
     }
@@ -681,7 +722,20 @@ AnalyzePage {
                     ValueCell { label: qsTr("最后收到"); value: simData.last }
                 }
 
-                LogTable { logModel: simLogModel }
+                LogTable {
+                    title: qsTr("本机 CAN RX 接收内容")
+                    logModel: simRxLogModel
+                }
+
+                LogTable {
+                    title: qsTr("本机 CAN TX 发出内容")
+                    logModel: simTxLogModel
+                }
+
+                LogTable {
+                    title: qsTr("手动发送内容（对端应 RX）")
+                    logModel: simManualLogModel
+                }
             }
         }
     }
