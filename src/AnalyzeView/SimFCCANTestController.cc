@@ -11,6 +11,7 @@
 
 #include "MAVLinkProtocol.h"
 #include "MultiVehicleManager.h"
+#include "QmlObjectListModel.h"
 #include "VehicleLinkManager.h"
 
 #include <QByteArray>
@@ -24,6 +25,15 @@ namespace {
 constexpr qint64 kMinSendIntervalMs = 1000;
 constexpr uint16_t kHybridBmsTunnelPayloadType = 32001;
 constexpr uint8_t kHybridBmsTunnelVersion = 1;
+constexpr uint32_t kPackControlCommandId = 0x0401f456;
+constexpr uint32_t kOutputControlCommandId = 0x0402f456;
+constexpr uint32_t kPackControlResponseId = 0x040156f4;
+constexpr uint32_t kOutputControlResponseId = 0x040256f4;
+constexpr uint32_t kMbmsStatusId = 0x041256f4;
+constexpr uint32_t kMbmsDataId = 0x041356f4;
+constexpr uint32_t kLvBatteryDataId = 0x042056f4;
+constexpr uint32_t kDcdcDataId = 0x043056f4;
+constexpr uint32_t kSimNumberTestId = 0x044056f4;
 
 enum class HybridBmsTunnelOpcode : uint8_t {
     Start = 1,
@@ -57,6 +67,27 @@ void appendU32(QByteArray& payload, uint32_t value)
     payload.append(static_cast<char>((value >> 16) & 0xff));
     payload.append(static_cast<char>((value >> 24) & 0xff));
 }
+
+bool isFcToSimFrame(uint32_t canId)
+{
+    return canId == kPackControlCommandId || canId == kOutputControlCommandId;
+}
+
+bool isSimToFcFrame(uint32_t canId)
+{
+    switch (canId) {
+    case kPackControlResponseId:
+    case kOutputControlResponseId:
+    case kMbmsStatusId:
+    case kMbmsDataId:
+    case kLvBatteryDataId:
+    case kDcdcDataId:
+    case kSimNumberTestId:
+        return true;
+    default:
+        return false;
+    }
+}
 }
 
 SimFCCANTestController::SimFCCANTestController(QObject* parent)
@@ -66,9 +97,12 @@ SimFCCANTestController::SimFCCANTestController(QObject* parent)
     _manager = MultiVehicleManager::instance();
 
     (void) connect(_manager, &MultiVehicleManager::activeVehicleChanged, this, &SimFCCANTestController::_setActiveVehicle);
+    (void) connect(_manager, &MultiVehicleManager::vehicleAdded, this, &SimFCCANTestController::_vehiclesChanged);
+    (void) connect(_manager, &MultiVehicleManager::vehicleRemoved, this, &SimFCCANTestController::_vehiclesChanged);
 
     _lastSendTimer.invalidate();
     _setActiveVehicle(_manager ? _manager->activeVehicle() : nullptr);
+    _vehiclesChanged();
 }
 
 SimFCCANTestController::~SimFCCANTestController()
@@ -110,7 +144,7 @@ void SimFCCANTestController::sendFcControl(bool flightState, bool packPower, int
 {
     setVehicleRole(QStringLiteral("fc"));
 
-    if (!_validateSendAllowed(1)) {
+    if (!_validateSendAllowed(_vehicleRole, 1)) {
         return;
     }
 
@@ -124,7 +158,8 @@ void SimFCCANTestController::sendFcControl(bool flightState, bool packPower, int
         .arg(packPower ? 1 : 0)
         .arg(channelMask & 0x0f, 0, 16);
 
-    if (_sendTunnelPayload(payload)) {
+    Vehicle* targetVehicle = _targetVehicleForRole(_vehicleRole);
+    if (_sendTunnelPayload(targetVehicle, payload)) {
         emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
@@ -138,7 +173,13 @@ void SimFCCANTestController::startModule(const QString& device, int simPeriodMs)
         QStringLiteral("hybrid_bms_can start -m %1 -d %2 -p %3").arg(_vehicleRole, normalizedDevice).arg(normalizedPeriod) :
         QStringLiteral("hybrid_bms_can start -m %1 -d %2").arg(_vehicleRole, normalizedDevice);
 
-    if (!_validateSendAllowed(1)) {
+    if (_vehicleRole == QStringLiteral("sim")) {
+        _simVehicle = _vehicle;
+    } else {
+        _fcVehicle = _vehicle;
+    }
+
+    if (!_validateSendAllowed(_vehicleRole, 1)) {
         return;
     }
 
@@ -147,14 +188,15 @@ void SimFCCANTestController::startModule(const QString& device, int simPeriodMs)
     payload.append(static_cast<char>(deviceIndex));
     appendU16(payload, static_cast<uint16_t>(normalizedPeriod));
 
-    if (_sendTunnelPayload(payload)) {
+    Vehicle* targetVehicle = _targetVehicleForRole(_vehicleRole);
+    if (_sendTunnelPayload(targetVehicle, payload)) {
         emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
 
 void SimFCCANTestController::stopModule()
 {
-    if (!_validateSendAllowed(1)) {
+    if (!_validateSendAllowed(_vehicleRole, 1)) {
         return;
     }
 
@@ -162,14 +204,15 @@ void SimFCCANTestController::stopModule()
 
     QByteArray payload = tunnelHeader(HybridBmsTunnelOpcode::Stop);
 
-    if (_sendTunnelPayload(payload)) {
+    Vehicle* targetVehicle = _targetVehicleForRole(_vehicleRole);
+    if (_sendTunnelPayload(targetVehicle, payload)) {
         emit commandSent(_vehicleRole, QStringLiteral("module"), command);
     }
 }
 
 bool SimFCCANTestController::_sendFrame(const QString& canId, const QString& hexData, bool enforceRateLimit)
 {
-    if (enforceRateLimit && !_validateSendAllowed(1)) {
+    if (enforceRateLimit && !_validateSendAllowed(_vehicleRole, 1)) {
         return false;
     }
 
@@ -197,7 +240,8 @@ bool SimFCCANTestController::_sendFrame(const QString& canId, const QString& hex
         payload.append(static_cast<char>(byte));
     }
 
-    if (_sendTunnelPayload(payload)) {
+    Vehicle* targetVehicle = _targetVehicleForRole(_vehicleRole);
+    if (_sendTunnelPayload(targetVehicle, payload)) {
         emit commandSent(_vehicleRole, normalizedCanId, normalizedHex.simplified().toUpper());
         return true;
     }
@@ -205,10 +249,11 @@ bool SimFCCANTestController::_sendFrame(const QString& canId, const QString& hex
     return false;
 }
 
-bool SimFCCANTestController::_validateSendAllowed(int commandCount)
+bool SimFCCANTestController::_validateSendAllowed(const QString& role, int commandCount)
 {
-    if (!_vehicle) {
-        emit errorText(QStringLiteral("No active Vehicle connected"));
+    if (!_targetVehicleForRole(role)) {
+        emit errorText(QStringLiteral("No %1 Vehicle bound. Select that vehicle, open the %2 tab, then click Start current role.")
+            .arg(role.toUpper(), role.toUpper()));
         return false;
     }
 
@@ -225,10 +270,10 @@ bool SimFCCANTestController::_validateSendAllowed(int commandCount)
     return true;
 }
 
-bool SimFCCANTestController::_sendTunnelPayload(const QByteArray& payload)
+bool SimFCCANTestController::_sendTunnelPayload(Vehicle* vehicle, const QByteArray& payload)
 {
-    if (!_vehicle) {
-        emit errorText(QStringLiteral("No active Vehicle connected"));
+    if (!vehicle) {
+        emit errorText(QStringLiteral("No target Vehicle connected"));
         return false;
     }
 
@@ -237,9 +282,9 @@ bool SimFCCANTestController::_sendTunnelPayload(const QByteArray& payload)
         return false;
     }
 
-    auto primaryLink = _vehicle->vehicleLinkManager()->primaryLink().lock();
+    auto primaryLink = vehicle->vehicleLinkManager()->primaryLink().lock();
     if (!primaryLink) {
-        emit errorText(QStringLiteral("No primary link for vehicle %1").arg(_vehicle->id()));
+        emit errorText(QStringLiteral("No primary link for vehicle %1").arg(vehicle->id()));
         return false;
     }
 
@@ -253,14 +298,14 @@ bool SimFCCANTestController::_sendTunnelPayload(const QByteArray& payload)
         _mavlink->getComponentId(),
         primaryLink->mavlinkChannel(),
         &msg,
-        _vehicle->id(),
-        _vehicle->defaultComponentId(),
+        vehicle->id(),
+        vehicle->defaultComponentId(),
         kHybridBmsTunnelPayloadType,
         payloadSize,
         reinterpret_cast<uint8_t*>(tunnelPayload.data()));
 
-    if (!_vehicle->sendMessageOnLinkThreadSafe(primaryLink.get(), msg)) {
-        emit errorText(QStringLiteral("Failed to send command to vehicle %1").arg(_vehicle->id()));
+    if (!vehicle->sendMessageOnLinkThreadSafe(primaryLink.get(), msg)) {
+        emit errorText(QStringLiteral("Failed to send command to vehicle %1").arg(vehicle->id()));
         return false;
     }
 
@@ -309,17 +354,53 @@ bool SimFCCANTestController::_parseHexData(const QString& hexData, QVector<uint8
 
 void SimFCCANTestController::_setActiveVehicle(Vehicle* vehicle)
 {
-    if (_vehicle) {
-        (void) disconnect(_vehicle, &Vehicle::textMessageReceived, this, &SimFCCANTestController::_handleVehicleTextMessage);
-    }
-
     _vehicle = vehicle;
+    emit activeVehicleChanged();
+}
 
-    if (_vehicle) {
-        (void) connect(_vehicle, &Vehicle::textMessageReceived, this, &SimFCCANTestController::_handleVehicleTextMessage);
+void SimFCCANTestController::_connectVehicle(Vehicle* vehicle)
+{
+    if (!vehicle) {
+        return;
     }
 
-    emit activeVehicleChanged();
+    _vehicleConnections.append(
+        connect(vehicle, &Vehicle::textMessageReceived, this, &SimFCCANTestController::_handleVehicleTextMessage));
+}
+
+void SimFCCANTestController::_vehiclesChanged()
+{
+    for (const QMetaObject::Connection& connection : _vehicleConnections) {
+        (void) disconnect(connection);
+    }
+
+    _vehicleConnections.clear();
+
+    QmlObjectListModel* vehicles = _manager ? _manager->vehicles() : nullptr;
+
+    if (!vehicles) {
+        _fcVehicle = nullptr;
+        _simVehicle = nullptr;
+        return;
+    }
+
+    bool fcStillConnected = false;
+    bool simStillConnected = false;
+
+    for (int i = 0; i < vehicles->count(); i++) {
+        Vehicle* vehicle = vehicles->value<Vehicle*>(i);
+        _connectVehicle(vehicle);
+        fcStillConnected = fcStillConnected || vehicle == _fcVehicle;
+        simStillConnected = simStillConnected || vehicle == _simVehicle;
+    }
+
+    if (!fcStillConnected) {
+        _fcVehicle = nullptr;
+    }
+
+    if (!simStillConnected) {
+        _simVehicle = nullptr;
+    }
 }
 
 bool SimFCCANTestController::_parseFrameText(const QString& text, QString& direction, QString& canId, QString& hexData) const
@@ -341,7 +422,6 @@ bool SimFCCANTestController::_parseFrameText(const QString& text, QString& direc
 
 void SimFCCANTestController::_handleVehicleTextMessage(int sysid, int componentid, int severity, QString text, QString description)
 {
-    Q_UNUSED(sysid);
     Q_UNUSED(componentid);
     Q_UNUSED(severity);
     Q_UNUSED(description);
@@ -353,5 +433,48 @@ void SimFCCANTestController::_handleVehicleTextMessage(int sysid, int componenti
         return;
     }
 
-    emit frameReceived(_vehicleRole, direction, canId, hexData.split(QLatin1Char(' '), Qt::SkipEmptyParts).size(), hexData, text);
+    emit frameReceived(_roleForFrame(sysid, direction, canId), direction, canId, hexData.split(QLatin1Char(' '), Qt::SkipEmptyParts).size(), hexData, text);
+}
+
+Vehicle* SimFCCANTestController::_targetVehicleForRole(const QString& role) const
+{
+    Vehicle* roleVehicle = (role == QStringLiteral("sim")) ? _simVehicle : _fcVehicle;
+    return roleVehicle ? roleVehicle : _vehicle;
+}
+
+QString SimFCCANTestController::_roleForFrame(int sysid, const QString& direction, const QString& canId) const
+{
+    bool ok = false;
+    const uint32_t parsedCanId = canId.toUInt(&ok, 0);
+
+    if (ok) {
+        if (direction == QStringLiteral("RX")) {
+            if (isSimToFcFrame(parsedCanId)) {
+                return QStringLiteral("fc");
+            }
+
+            if (isFcToSimFrame(parsedCanId)) {
+                return QStringLiteral("sim");
+            }
+
+        } else if (direction == QStringLiteral("TX")) {
+            if (isSimToFcFrame(parsedCanId)) {
+                return QStringLiteral("sim");
+            }
+
+            if (isFcToSimFrame(parsedCanId)) {
+                return QStringLiteral("fc");
+            }
+        }
+    }
+
+    if (_simVehicle && sysid == _simVehicle->id()) {
+        return QStringLiteral("sim");
+    }
+
+    if (_fcVehicle && sysid == _fcVehicle->id()) {
+        return QStringLiteral("fc");
+    }
+
+    return _vehicleRole;
 }

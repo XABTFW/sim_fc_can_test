@@ -126,18 +126,15 @@ AnalyzePage {
 
         onCommandSent: function(role, canId, hexData) {
             if (canId === "module") {
-                lastCommand = qsTr("%1 Vehicle=%2: %3")
+                lastCommand = qsTr("%1: %2")
                     .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
-                    .arg(controller.activeVehicleId)
                     .arg(hexData)
             } else {
-                lastCommand = qsTr("%1 Vehicle=%2: hybrid_bms_can send %3 %4")
+                lastCommand = qsTr("%1: hybrid_bms_can send %2 %3")
                     .arg(role === "sim" ? qsTr("SIM电池端") : qsTr("FC端"))
-                    .arg(controller.activeVehicleId)
                     .arg(canId)
                     .arg(hexData)
             }
-            root.addManualFrame(role, canId, hexData)
             errorLabel.text = ""
         }
 
@@ -185,6 +182,10 @@ AnalyzePage {
         return out.join(" ")
     }
 
+    function normalizeHex(hexText) {
+        return hexBytes(byteArray(hexText))
+    }
+
     function u16(bytes, index) {
         if (bytes.length <= index + 1) {
             return 0
@@ -207,6 +208,7 @@ AnalyzePage {
         case "0x041356F4": return qsTr("MBMS数据帧")
         case "0x042056F4": return qsTr("低压电池运行数据")
         case "0x043056F4": return qsTr("DCDC运行数据")
+        case "0x044056F4": return qsTr("SIM数字测试帧")
         default: return qsTr("自定义帧")
         }
     }
@@ -303,6 +305,9 @@ AnalyzePage {
                 fcData.dcdcCurrent = dcdcI + " A"
                 fcData.dcdcTemp = dcdcT + " C"
             }
+        } else if (id === "0x044056F4" && bytes.length >= 2) {
+            var testValue = u16(bytes, 0)
+            text += ": value=" + testValue
         }
 
         fcData = fcData
@@ -317,20 +322,35 @@ AnalyzePage {
         }
     }
 
-    function addManualFrame(role, canId, hexData) {
-        var now = new Date().toLocaleTimeString()
-        var isModuleCommand = canId === "module"
-        var item = {
-            time: now,
-            direction: qsTr("手动"),
-            canId: isModuleCommand ? qsTr("模块") : normalizeId(canId),
-            dlc: isModuleCommand ? "--" : byteArray(hexData).length,
-            hexData: hexData,
-            name: isModuleCommand ? qsTr("模块命令") : protocolName(canId),
-            parsed: isModuleCommand ? hexData : parseFrame(canId, hexData, role, "MANUAL")
+    function isPeerManualRxFrame(role, canId) {
+        var id = normalizeId(canId)
+
+        if (role === "sim") {
+            return id === "0x0401F456" || id === "0x0402F456"
         }
 
-        insertLog(role === "sim" ? simManualLogModel : fcManualLogModel, item, 80)
+        return id === "0x040156F4" ||
+               id === "0x040256F4" ||
+               id === "0x041256F4" ||
+               id === "0x041356F4" ||
+               id === "0x042056F4" ||
+               id === "0x043056F4" ||
+               id === "0x044056F4"
+    }
+
+    function addManualFrame(receiverRole, canId, len, hexData) {
+        var now = new Date().toLocaleTimeString()
+        var item = {
+            time: now,
+            direction: qsTr("对端手动"),
+            canId: normalizeId(canId),
+            dlc: len,
+            hexData: hexData,
+            name: protocolName(canId),
+            parsed: parseFrame(canId, hexData, receiverRole, "RX")
+        }
+
+        insertLog(receiverRole === "sim" ? simManualLogModel : fcManualLogModel, item, 80)
     }
 
     function addFrame(role, direction, canId, len, hexData, rawText) {
@@ -359,9 +379,13 @@ AnalyzePage {
             fcData = fcData
             insertLog(direction === "RX" ? fcRxLogModel : fcTxLogModel, item, 120)
         }
+
+        if (direction === "RX" && isPeerManualRxFrame(role, canId)) {
+            addManualFrame(role, canId, len, hexData)
+        }
     }
 
-    function sendFrame(canId, hexData) {
+    function sendFrame(senderRole, canId, hexData) {
         if (sendCoolingDown) {
             errorLabel.text = qsTr("发送过快，请稍后再试")
             return
@@ -369,7 +393,11 @@ AnalyzePage {
 
         sendCoolingDown = true
         sendCooldownTimer.restart()
-        controller.sendFrame(canId, hexData)
+        if (senderRole === "sim") {
+            controller.sendFrameToSim(canId, hexData)
+        } else {
+            controller.sendFrameToFc(canId, hexData)
+        }
     }
 
     function sendFcControl(flightState, packPower, channelMask) {
@@ -395,6 +423,17 @@ AnalyzePage {
         bytes[47] = Math.round(Number(tMax) + 40)
         bytes[50] = Math.round(Number(tMin) + 40)
         setU16(bytes, 53, Math.round(Number(insulation)))
+        return hexBytes(bytes)
+    }
+
+    function buildNumberTestFrame(valueText) {
+        var value = Math.max(0, Math.min(65535, parseInt(valueText)))
+        if (isNaN(value)) {
+            value = 0
+        }
+
+        var bytes = [0, 0]
+        setU16(bytes, 0, value)
         return hexBytes(bytes)
     }
 
@@ -534,12 +573,12 @@ AnalyzePage {
                     QGCButton {
                         text: qsTr("发送电池组")
                         enabled: controller.activeVehicleAvailable && !sendCoolingDown
-                        onClicked: sendFrame("0x0401F456", hexBytes([flightSwitch.checked ? 0xff : 0x00, packSwitch.checked ? 0xff : 0x00]))
+                        onClicked: sendFrame("fc", "0x0401F456", hexBytes([flightSwitch.checked ? 0xff : 0x00, packSwitch.checked ? 0xff : 0x00]))
                     }
                     QGCButton {
                         text: qsTr("发送通道")
                         enabled: controller.activeVehicleAvailable && !sendCoolingDown
-                        onClicked: sendFrame("0x0402F456", hexBytes([ch1Switch.checked ? 0xff : 0x00, ch2Switch.checked ? 0xff : 0x00, ch3Switch.checked ? 0xff : 0x00, ch4Switch.checked ? 0xff : 0x00]))
+                        onClicked: sendFrame("fc", "0x0402F456", hexBytes([ch1Switch.checked ? 0xff : 0x00, ch2Switch.checked ? 0xff : 0x00, ch3Switch.checked ? 0xff : 0x00, ch4Switch.checked ? 0xff : 0x00]))
                     }
                 }
                 QGCButton {
@@ -594,7 +633,7 @@ AnalyzePage {
                 }
 
                 LogTable {
-                    title: qsTr("手动发送内容（对端应 RX）")
+                    title: qsTr("对端手动/测试 RX 内容")
                     logModel: fcManualLogModel
                 }
             }
@@ -624,6 +663,7 @@ AnalyzePage {
                         { text: qsTr("MBMS数据帧 0x041356F4"), canId: "0x041356F4", data: "01 74 0E 74 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 74 0E 00 00 42 0E 00 00 46 00 00 41 00 00 88 13" },
                         { text: qsTr("低压电池运行数据 0x042056F4"), canId: "0x042056F4", data: "74 0E E8 03 20 03 00 00 74 0E 00 42 0E 00 46 00 41 00 00 04 00 00 00" },
                         { text: qsTr("DCDC运行数据 0x043056F4"), canId: "0x043056F4", data: "0C 01 08 14 00 46 00 46" },
+                        { text: qsTr("SIM数字测试帧 0x044056F4"), canId: "0x044056F4", data: "7B 00" },
                         { text: qsTr("自定义扩展帧"), canId: "0x041356F4", data: "" }
                     ]
                     onActivated: {
@@ -658,7 +698,31 @@ AnalyzePage {
                     Layout.fillWidth: true
                     primary: true
                     enabled: controller.activeVehicleAvailable && !sendCoolingDown
-                    onClicked: sendFrame(simCanId.text, simHex.text)
+                    onClicked: sendFrame("sim", simCanId.text, simHex.text)
+                }
+
+                GridLayout {
+                    columns: 2
+                    Layout.fillWidth: true
+                    QGCLabel { text: qsTr("测试数字") }
+                    QGCTextField {
+                        id: simNumberTest
+                        Layout.fillWidth: true
+                        text: "123"
+                        validator: IntValidator { bottom: 0; top: 65535 }
+                        inputMethodHints: Qt.ImhDigitsOnly
+                    }
+                }
+
+                QGCButton {
+                    text: qsTr("发送数字测试帧")
+                    Layout.fillWidth: true
+                    enabled: controller.activeVehicleAvailable && !sendCoolingDown
+                    onClicked: {
+                        simCanId.text = "0x044056F4"
+                        simHex.text = buildNumberTestFrame(simNumberTest.text)
+                        sendFrame("sim", simCanId.text, simHex.text)
+                    }
                 }
 
                 SectionTitle { text: qsTr("模拟数据配置") }
@@ -733,7 +797,7 @@ AnalyzePage {
                 }
 
                 LogTable {
-                    title: qsTr("手动发送内容（对端应 RX）")
+                    title: qsTr("对端手动/测试 RX 内容")
                     logModel: simManualLogModel
                 }
             }

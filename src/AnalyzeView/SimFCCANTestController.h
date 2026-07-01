@@ -12,6 +12,7 @@
 #include <QObject>
 #include <QByteArray>
 #include <QElapsedTimer>
+#include <QList>
 #include <QString>
 #include <QVector>
 
@@ -54,18 +55,25 @@ signals:
 
 private slots:
     void _setActiveVehicle(Vehicle* vehicle);
+    void _vehiclesChanged();
     void _handleVehicleTextMessage(int sysid, int componentid, int severity, QString text, QString description);
 
 private:
-    bool _sendTunnelPayload(const QByteArray& payload);
-    bool _validateSendAllowed(int commandCount);
+    bool _sendTunnelPayload(Vehicle* vehicle, const QByteArray& payload);
+    bool _validateSendAllowed(const QString& role, int commandCount);
     bool _parseHexData(const QString& hexData, QVector<uint8_t>& bytesOut) const;
     bool _parseFrameText(const QString& text, QString& direction, QString& canId, QString& hexData) const;
     bool _sendFrame(const QString& canId, const QString& hexData, bool enforceRateLimit);
+    Vehicle* _targetVehicleForRole(const QString& role) const;
+    void _connectVehicle(Vehicle* vehicle);
+    QString _roleForFrame(int sysid, const QString& direction, const QString& canId) const;
 
     MAVLinkProtocol* _mavlink{nullptr};
     MultiVehicleManager* _manager{nullptr};
     Vehicle* _vehicle{nullptr};
+    Vehicle* _fcVehicle{nullptr};
+    Vehicle* _simVehicle{nullptr};
     QString _vehicleRole{QStringLiteral("fc")};
     QElapsedTimer _lastSendTimer;
+    QList<QMetaObject::Connection> _vehicleConnections;
 };
