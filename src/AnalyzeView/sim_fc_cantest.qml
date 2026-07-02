@@ -407,7 +407,7 @@ AnalyzePage {
         sendCoolingDown = true
         sendCooldownTimer.restart()
         if (senderRole === "sim") {
-            controller.sendSimManualFrame(canId, hexData)
+            controller.sendFrameToSim(canId, hexData)
         } else {
             controller.sendFrameToFc(canId, hexData)
         }
